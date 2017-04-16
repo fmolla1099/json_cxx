@@ -25,6 +25,9 @@ bool node_type::operator==(const Node &other) const { \
 } \
 string node_type::repr(unsigned int indent) const { \
     return string(indent * 4, ' ') + ::repr(this->value); \
+} \
+node_type *node_type::clone() const { \
+    return new node_type(this->value); \
 }
 
 
@@ -66,6 +69,15 @@ string NodeList::repr(unsigned int indent) const {
 }
 
 
+NodeList *NodeList::clone() const {
+    NodeList *list = new NodeList();
+    for (const Node::Ptr &child : this->value) {
+        list->value.emplace_back(child->clone());
+    }
+    return list;
+}
+
+
 bool NodePair::operator==(const Node &other) const {
     const NodePair *node = dynamic_cast<const NodePair *>(&other);
     if (node == nullptr) {
@@ -77,6 +89,14 @@ bool NodePair::operator==(const Node &other) const {
 
 string NodePair::repr(unsigned int indent) const {
     return string(indent * 4, ' ') + this->key->repr() + ":\n" + this->value->repr(indent + 1);
+}
+
+
+NodePair *NodePair::clone() const {
+    return new NodePair(
+        NodeString::Ptr(this->key->clone()),
+        Node::Ptr(this->value->clone())
+    );
 }
 
 
@@ -113,6 +133,15 @@ string NodeObject::repr(unsigned int indent) const {
 }
 
 
+NodeObject *NodeObject::clone() const {
+    NodeObject *obj = new NodeObject();
+    for (const NodePair::Ptr &pair : this->pairs) {
+        obj->pairs.emplace_back(pair->clone());
+    }
+    return obj;
+}
+
+
 Parser::Parser() {
     this->states.push_back(ParserState::JSON);
 }
@@ -134,7 +163,7 @@ bool Parser::is_finished() const {
 void Parser::feed(const Token &tok) {
     if (this->states.empty()) {
         if (tok.type != TokenType::END) {
-            throw ParserError("Unexpected token: " + repr(tok) + ", parser not ready");
+            this->unexpected_token(tok, {TokenType::END});
         }
     } else if (this->states.back() == ParserState::JSON) {
         this->states.back() = ParserState::JSON_END;
@@ -267,6 +296,7 @@ void Parser::enter_pair() {
     this->states.push_back(ParserState::PAIR);
     this->states.push_back(ParserState::STRING);
 }
+
 
 void Parser::unexpected_token(const Token &tok, const vector<TokenType> &expected) {
     string types;

@@ -30,6 +30,7 @@ struct Node {
     typedef unique_ptr<Node> Ptr;
 
     Node(NodeType type) : type(type) {}
+    virtual Node *clone() const = 0;
     virtual bool operator==(const Node &other) const = 0;
     virtual bool operator!=(const Node &other) const;
     virtual string repr(unsigned int indent = 0) const = 0;
@@ -46,7 +47,8 @@ REPR(Node) {
 #define NODE_COMMON_DECL(node_type) \
 typedef unique_ptr<node_type> Ptr; \
 virtual bool operator==(const Node &other) const; \
-virtual string repr(unsigned int indent = 0) const
+virtual string repr(unsigned int indent = 0) const; \
+virtual node_type *clone() const
 
 
 struct NodeInt : Node {
@@ -101,6 +103,13 @@ struct NodeObject : Node {
 
 
 #undef NODE_COMMON_DECL
+
+
+template<class NodeClass>
+typename NodeClass::Ptr clone_node(const Node &node) {
+    NodeClass *cloned = dynamic_cast<NodeClass *>(node.clone());
+    return typename NodeClass::Ptr(cloned);
+}
 
 
 enum class ParserState {

@@ -80,10 +80,19 @@ TEST_CASE("Test parser") {
     CHECK(*parse("{\"a\": 1}") == *O({P("a", P(1))}));
     CHECK(*parse("{\"a\": 1, \"b\": 2}") == *O({
         P("a", P(1)),
-        P("b", P(2))
+        P("b", P(2)),
     }));
 
     CHECK(*parse("{\"a\": [1]}") == *O({
-        P("a", LP({P(1)}))
+        P("a", LP({P(1)})),
     }));
+}
+
+
+TEST_CASE("Test clone_node") {
+    NodeObject::Ptr node = O({
+        P("a", LP({P(1)})),
+        P("b", P(2)),
+    });
+    CHECK(*node == *clone_node<NodeObject>(*node));
 }
