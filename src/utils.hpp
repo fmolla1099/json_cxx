@@ -47,6 +47,10 @@ inline string repr(double value) {
 inline string repr(long double value) {
     return to_string(value);
 }
+inline string repr(const string &str) {
+    // TODO: quote and escape
+    return str;
+}
 
 
 #endif // UTILS_HPP

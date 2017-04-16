@@ -14,7 +14,14 @@ using std::string;
 
 class BaseException : public runtime_error {
 public:
-    BaseException(const string &msg) : runtime_error(msg) {}
+    BaseException(
+        const string &msg, const SourcePos &start = SourcePos(), const SourcePos &end = SourcePos()
+    )
+        : runtime_error(msg), start(start), end(end)
+    {}
+
+    SourcePos start;
+    SourcePos end;
 };
 
 
@@ -23,11 +30,18 @@ public:
     TokenizerError(
         const string &msg, const SourcePos &start = SourcePos(), const SourcePos &end = SourcePos()
     )
-        : BaseException(msg), start(start), end(end)
+        : BaseException(msg, start, end)
     {}
+};
 
-    SourcePos start;
-    SourcePos end;
+
+class ParserError : public BaseException {
+public:
+    ParserError(
+        const string &msg, const SourcePos &start = SourcePos(), const SourcePos &end = SourcePos()
+    )
+        : BaseException(msg, start, end)
+    {}
 };
 
 

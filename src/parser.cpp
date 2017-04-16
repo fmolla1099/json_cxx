@@ -1,0 +1,278 @@
+#include <cassert>
+#include <string>
+
+#include "exceptions.h"
+#include "parser.h"
+#include "utils.hpp"
+
+
+using std::to_string;
+
+
+bool Node::operator!=(const Node &other) const {
+    return !(*this == other);
+}
+
+
+#define SIMPLE_NODE_COMMON(node_type) \
+bool node_type::operator==(const Node &other) const { \
+    const node_type *node = dynamic_cast<const node_type *>(&other); \
+    if (node != nullptr) { \
+        return this->value == node->value; \
+    } else { \
+        return false; \
+    } \
+} \
+string node_type::repr(unsigned int indent) const { \
+    return string(indent * 4, ' ') + ::repr(this->value); \
+}
+
+
+SIMPLE_NODE_COMMON(NodeInt);
+SIMPLE_NODE_COMMON(NodeFloat);
+SIMPLE_NODE_COMMON(NodeString);
+
+
+bool NodeList::operator==(const Node &other) const {
+    const NodeList *node = dynamic_cast<const NodeList *>(&other);
+    if (node == nullptr) {
+        return false;
+    }
+    if (this->value.size() != node->value.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < this->value.size(); ++i) {
+        if (*this->value[i] != *node->value[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+string NodeList::repr(unsigned int indent) const {
+    string ans;
+    ans += string(indent * 4, ' ') + "[\n";
+    for (size_t i = 0; i < this->value.size(); ++i) {
+        ans += this->value[i]->repr(indent + 1);
+        if (i != this->value.size() - 1) {
+            ans += ",\n";
+        } else {
+            ans += "\n";
+        }
+    }
+    ans += string(indent * 4, ' ') + "]";
+    return ans;
+}
+
+
+bool NodePair::operator==(const Node &other) const {
+    const NodePair *node = dynamic_cast<const NodePair *>(&other);
+    if (node == nullptr) {
+        return false;
+    }
+    return *this->key == *node->key && *this->value == *node->value;
+}
+
+
+string NodePair::repr(unsigned int indent) const {
+    return string(indent * 4, ' ') + this->key->repr() + ":\n" + this->value->repr(indent + 1);
+}
+
+
+bool NodeObject::operator==(const Node &other) const {
+    const NodeObject *node = dynamic_cast<const NodeObject *>(&other);
+    if (node == nullptr) {
+        return false;
+    }
+    if (this->pairs.size() != node->pairs.size()) {
+        return false;
+    }
+    for (size_t i = 0; i < this->pairs.size(); ++i) {
+        if (*this->pairs[i] != *node->pairs[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+
+string NodeObject::repr(unsigned int indent) const {
+    string ans;
+    ans += string(indent * 4, ' ') + "{\n";
+    for (size_t i = 0; i < this->pairs.size(); ++i) {
+        ans += this->pairs[i]->repr(indent + 1);
+        if (i != this->pairs.size() - 1) {
+            ans += ",\n";
+        } else {
+            ans += "\n";
+        }
+    }
+    ans += string(indent * 4, ' ') + "}";
+    return ans;
+}
+
+
+Parser::Parser() {
+    this->states.push_back(ParserState::JSON);
+}
+
+
+Node::Ptr Parser::pop_result() {
+    assert(this->is_finished());
+    Node::Ptr node = move(this->nodes.back());
+    this->nodes.pop_back();
+    return node;
+}
+
+
+bool Parser::is_finished() const {
+    return this->nodes.size() == 1 && this->states.empty();
+}
+
+
+void Parser::feed(const Token &tok) {
+    if (this->states.empty()) {
+        if (tok.type != TokenType::END) {
+            throw ParserError("Unexpected token: " + repr(tok) + ", parser not ready");
+        }
+    } else if (this->states.back() == ParserState::JSON) {
+        this->states.back() = ParserState::JSON_END;
+        if (tok.type == TokenType::LBRACKET) {
+            this->enter_list();
+        } else if (tok.type == TokenType::LBRACE) {
+            this->enter_object();
+        } else if (tok.type == TokenType::INT) {
+            NodeInt *node = new NodeInt(reinterpret_cast<const TokenInt&>(tok).value);
+            this->nodes.emplace_back(node);
+            this->states.pop_back();
+        } else if (tok.type == TokenType::FLOAT) {
+            NodeFloat *node = new NodeFloat(reinterpret_cast<const TokenFloat&>(tok).value);
+            this->nodes.emplace_back(node);
+            this->states.pop_back();
+        } else if (tok.type == TokenType::STRING) {
+            NodeString *node = new NodeString(reinterpret_cast<const TokenString&>(tok).value);
+            this->nodes.emplace_back(node);
+            this->states.pop_back();
+        } else {
+            this->unexpected_token(tok, {
+                TokenType::LBRACKET, TokenType::LBRACE,
+                TokenType::INT, TokenType::FLOAT, TokenType::STRING,
+            });
+        }
+    } else if (this->states.back() == ParserState::JSON_END) {
+        this->states.pop_back();
+        this->feed(tok);
+    } else if (this->states.back() == ParserState::STRING) {
+        if (tok.type == TokenType::STRING) {
+            NodeString *node = new NodeString(reinterpret_cast<const TokenString&>(tok).value);
+            this->nodes.emplace_back(node);
+            this->states.pop_back();
+        } else {
+            this->unexpected_token(tok, {TokenType::STRING});
+        }
+    } else if (this->states.back() == ParserState::LIST) {
+        NodeList *node = new NodeList();
+        this->nodes.emplace_back(node);
+        if (tok.type == TokenType::RBRACKET) {
+            this->states.pop_back();
+        } else {
+            this->enter_list_item();
+            this->feed(tok);
+        }
+    } else if (this->states.back() == ParserState::LIST_END) {
+        Node::Ptr node = move(this->nodes.back());
+        this->nodes.pop_back();
+        NodeList &list = reinterpret_cast<NodeList &>(*this->nodes.back());
+        list.value.push_back(move(node));
+
+        if (tok.type == TokenType::RBRACKET) {
+            this->states.pop_back();
+        } else if (tok.type == TokenType::COMMA) {
+            this->enter_list_item();
+        } else {
+            this->unexpected_token(tok, {TokenType::RBRACKET, TokenType::COMMA});
+        }
+    } else if (this->states.back() == ParserState::OBJECT) {
+        NodeObject *node = new NodeObject();
+        this->nodes.emplace_back(node);
+        if (tok.type == TokenType::RBRACE) {
+            this->states.pop_back();
+        } else {
+            this->enter_object_item();
+            this->feed(tok);
+        }
+    } else if (this->states.back() == ParserState::OBJECT_END) {
+        if (tok.type == TokenType::RBRACE) {
+            this->states.pop_back();
+        } else if (tok.type == TokenType::COMMA) {
+            this->enter_object_item();
+        } else {
+            this->unexpected_token(tok, {TokenType::RBRACE, TokenType::COMMA});
+        }
+    } else if (this->states.back() == ParserState::PAIR) {
+        if (tok.type == TokenType::COLON) {
+            this->states.back() = ParserState::PAIR_END;
+            this->enter_json();
+        } else {
+            this->unexpected_token(tok, {TokenType::COLON});
+        }
+    } else if (this->states.back() == ParserState::PAIR_END) {
+        Node *value = this->nodes.back().release();
+        this->nodes.pop_back();
+        NodeString *key = static_cast<NodeString *>(this->nodes.back().release());
+        this->nodes.pop_back();
+        assert(key->type == NodeType::STRING);
+
+        NodeObject &obj = reinterpret_cast<NodeObject &>(*this->nodes.back());
+        NodePair *pair = new NodePair(NodeString::Ptr(key), Node::Ptr(value));
+        obj.pairs.emplace_back(pair);
+
+        this->states.pop_back();
+        this->feed(tok);
+    } else {
+        assert(!"Unreachable");
+    }
+}
+
+
+void Parser::enter_json() {
+    this->states.push_back(ParserState::JSON);
+}
+
+
+void Parser::enter_list() {
+    this->states.push_back(ParserState::LIST);
+}
+
+
+void Parser::enter_list_item() {
+    this->states.back() = ParserState::LIST_END;
+    this->enter_json();
+}
+
+
+void Parser::enter_object() {
+    this->states.push_back(ParserState::OBJECT);
+}
+
+
+void Parser::enter_object_item() {
+    this->states.back() = ParserState::OBJECT_END;
+    this->enter_pair();
+}
+
+
+void Parser::enter_pair() {
+    this->states.push_back(ParserState::PAIR);
+    this->states.push_back(ParserState::STRING);
+}
+
+void Parser::unexpected_token(const Token &tok, const vector<TokenType> &expected) {
+    string types;
+    for (TokenType tt : expected) {
+        types.push_back(static_cast<char>(tt));
+    }
+    string msg = "Unexpected token: " + repr(tok)  + ", expected types: '" + types + "'.";
+    throw ParserError(msg);
+}
