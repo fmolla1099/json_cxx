@@ -67,6 +67,18 @@ bool Token::operator!=(const Token &other) const {
 
 
 template<>
+string TokenBool::name() const {
+    return "Bool";
+}
+
+
+template<>
+string TokenBool::repr_value() const {
+    return this->value ? "true" : "false";
+}
+
+
+template<>
 string TokenInt::name() const {
     return "Int";
 }
@@ -113,6 +125,8 @@ void Scanner::refeed(char ch) {
     switch (this->state) {
         case ScannerState::INIT:
             return this->st_init(ch);
+        case ScannerState::ID:
+            return this->st_id(ch);
         case ScannerState::NUMBER:
             return this->st_number(ch);
         case ScannerState::STRING:
@@ -156,8 +170,45 @@ void Scanner::st_init(char ch) {
     } else if (isdigit(ch) || ch == '.' || ch == '+' || ch == '-') {
         this->state = ScannerState::NUMBER;
         this->refeed(ch);
+    } else if (isalpha(ch)) {
+        this->state = ScannerState::ID;
+        this->refeed(ch);
     } else {
         this->unknown_char(ch);
+    }
+}
+
+
+void Scanner::st_id(char ch) {
+    if (isalpha(ch)) {
+        this->id_state.value.push_back(ch);
+    } else {
+        Token *tok = nullptr;
+        if (this->id_state.value == "null") {
+            tok = new Token(TokenType::NIL);
+        } else if (this->id_state.value == "true") {
+            tok = new TokenBool(true);
+        } else if (this->id_state.value == "false") {
+            tok = new TokenBool(false);
+        } else {
+            assert(!this->id_state.value.empty());
+        }
+
+        if (tok != nullptr) {
+            tok->start = this->start_pos;
+            tok->end = this->prev_pos;
+            this->buffer.emplace_back(tok);
+            // reset
+            this->id_state = IdState();
+            this->state = ScannerState::INIT;
+            this->refeed(ch);
+        } else {
+            this->exception(
+                "bad identifier: '" + this->id_state.value + "', "
+                "expect null|true|false",
+                this->start_pos, this->prev_pos
+            );
+        }
     }
 }
 
@@ -272,8 +323,14 @@ void Scanner::st_string(char ch) {
 }
 
 
-void Scanner::exception(const string &msg) {
-    throw TokenizerError(msg, this->start_pos, this->cur_pos);
+void Scanner::exception(const string &msg, SourcePos start, SourcePos end) {
+    if (!start.is_valid()) {
+        start = this->start_pos;
+    }
+    if (!end.is_valid()) {
+        end = this->cur_pos;
+    }
+    throw TokenizerError(msg, start, end);
 }
 
 

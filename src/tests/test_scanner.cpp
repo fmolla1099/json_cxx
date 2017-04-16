@@ -75,6 +75,17 @@ TEST_CASE("Test Scanner basic") {
     tokens = check_tokens("\"asdf\"", {new TokenString("asdf")});
     check_tokens_pos(tokens, {{SourcePos(0, 0), SourcePos(0, 5)}});
 
+    tokens = check_tokens("null true false", {
+        new Token(TokenType::NIL),
+        new TokenBool(true),
+        new TokenBool(false),
+    });
+    check_tokens_pos(tokens, {
+        {SourcePos(0, 0), SourcePos(0, 3)},
+        {SourcePos(0, 5), SourcePos(0, 8)},
+        {SourcePos(0, 10), SourcePos(0, 14)},
+    });
+
     tokens = get_tokens("[1.2, {\"asdf\": 5}]");
     check_tokens_pos(tokens, {
         {SourcePos(0, 0), SourcePos(0, 0)},
@@ -103,4 +114,5 @@ void check_exception_pos(const string &str, SourcePos start, SourcePos end) {
 
 TEST_CASE("Test Scanner exception") {
     check_exception_pos("1.0ee ", SourcePos(0, 0), SourcePos(0, 4));
+    check_exception_pos("asdf ", SourcePos(0, 0), SourcePos(0, 3));
 }

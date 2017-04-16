@@ -16,6 +16,8 @@ using std::unique_ptr;
 
 
 enum class TokenType : char {
+    NIL     = 'n',
+    BOOL    = 'b',
     INT     = 'i',
     FLOAT   = 'f',
     STRING  = 's',
@@ -86,6 +88,7 @@ public:
 };
 
 
+typedef ExtendedToken<bool, TokenType::BOOL> TokenBool;
 typedef ExtendedToken<int64_t, TokenType::INT> TokenInt;
 typedef ExtendedToken<double, TokenType::FLOAT> TokenFloat;
 typedef ExtendedToken<string, TokenType::STRING> TokenString;
@@ -93,6 +96,7 @@ typedef ExtendedToken<string, TokenType::STRING> TokenString;
 
 enum class ScannerState {
     INIT,
+    ID,
     NUMBER,
     STRING,
     ENDED,
@@ -139,6 +143,11 @@ struct StringState {
 };
 
 
+struct IdState {
+    string value;
+};
+
+
 class Scanner {
 public:
     void feed(char ch);
@@ -147,10 +156,14 @@ public:
 private:
     void refeed(char ch);
     void st_init(char ch);
+    void st_id(char ch);
     void st_number(char ch);
     void st_string(char ch);
     void finish_num(char ch);
-    void exception(const string &msg);
+    void exception(
+        const string &msg,
+        SourcePos start = SourcePos(), SourcePos end = SourcePos()
+    );
     void unknown_char(char ch, const string &additional = "");
 
     ScannerState state = ScannerState::INIT;
@@ -161,6 +174,7 @@ private:
 
     NumberState num_state;
     StringState string_state;
+    IdState id_state;
 };
 
 
