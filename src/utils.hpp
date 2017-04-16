@@ -51,6 +51,9 @@ inline string repr(const string &str) {
     // TODO: quote and escape
     return str;
 }
+inline string repr(bool value) {
+    return value ? "true" : "false";
+}
 
 
 #endif // UTILS_HPP

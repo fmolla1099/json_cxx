@@ -72,6 +72,9 @@ Node::Ptr parse(const string &str) {
 
 
 TEST_CASE("Test parser") {
+    CHECK(*parse("null") == NodeNull());
+    CHECK(*parse("true") == NodeBool(true));
+    CHECK(*parse("false") == NodeBool(false));
     CHECK(*parse("1") == *N(1));
 
     CHECK(*parse("[]") == *L({}));

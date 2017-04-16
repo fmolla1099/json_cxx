@@ -17,6 +17,8 @@ using std::vector;
 
 
 enum class NodeType {
+    NIL,
+    BOOL,
     INT,
     FLOAT,
     STRING,
@@ -29,7 +31,7 @@ enum class NodeType {
 struct Node {
     typedef unique_ptr<Node> Ptr;
 
-    Node(NodeType type) : type(type) {}
+    explicit Node(NodeType type) : type(type) {}
     virtual ~Node() {}
     virtual Node *clone() const = 0;
     virtual bool operator==(const Node &other) const = 0;
@@ -52,8 +54,24 @@ virtual string repr(unsigned int indent = 0) const; \
 virtual node_type *clone() const
 
 
+struct NodeNull : Node {
+    NodeNull() : Node(NodeType::NIL) {}
+    virtual bool operator==(const Node &other) const;
+    virtual string repr(unsigned int indent = 0) const;
+    virtual NodeNull *clone() const;
+};
+
+
+struct NodeBool : Node {
+    explicit NodeBool(bool value) : Node(NodeType::BOOL), value(value) {}
+    bool value;
+
+    NODE_COMMON_DECL(NodeBool);
+};
+
+
 struct NodeInt : Node {
-    NodeInt(int64_t value) : Node(NodeType::INT), value(value) {}
+    explicit NodeInt(int64_t value) : Node(NodeType::INT), value(value) {}
     int64_t value;
 
     NODE_COMMON_DECL(NodeInt);
@@ -61,7 +79,7 @@ struct NodeInt : Node {
 
 
 struct NodeFloat : Node {
-    NodeFloat(double value) : Node(NodeType::FLOAT), value(value) {}
+    explicit NodeFloat(double value) : Node(NodeType::FLOAT), value(value) {}
     double value;
 
     NODE_COMMON_DECL(NodeFloat);
@@ -69,7 +87,7 @@ struct NodeFloat : Node {
 
 
 struct NodeString : Node {
-    NodeString(const string &value) : Node(NodeType::STRING), value(value) {}
+    explicit NodeString(const string &value) : Node(NodeType::STRING), value(value) {}
     string value;
 
     NODE_COMMON_DECL(NodeString);
