@@ -47,58 +47,54 @@ REPR(Node) {
 }
 
 
+template<class ValueType, NodeType node_type>
+struct SimpleNode : Node {
+    typedef  SimpleNode<ValueType, node_type> _SelfType;
+    typedef unique_ptr<_SelfType> Ptr;
+
+    explicit SimpleNode(ValueType value) : Node(node_type), value(value) {}
+
+    virtual bool operator==(const Node &other) const {
+        const _SelfType *node = dynamic_cast<const _SelfType *>(&other);
+        return node != nullptr && this->value == node->value;
+    }
+
+    virtual string repr(unsigned int indent = 0) const {
+        return string(indent * 4, ' ') + ::repr(this->value);
+    }
+
+    virtual _SelfType *clone() const {
+        return new _SelfType(this->value);
+    }
+
+    ValueType value;
+};
+
+
+typedef SimpleNode<bool, NodeType::BOOL> NodeBool;
+typedef SimpleNode<int64_t, NodeType::INT> NodeInt;
+typedef SimpleNode<double, NodeType::FLOAT> NodeFloat;
+typedef SimpleNode<string, NodeType::STRING> NodeString;
+
+
 #define NODE_COMMON_DECL(node_type) \
-typedef unique_ptr<node_type> Ptr; \
-virtual bool operator==(const Node &other) const; \
-virtual string repr(unsigned int indent = 0) const; \
-virtual node_type *clone() const
+    typedef unique_ptr<node_type> Ptr; \
+    virtual bool operator==(const Node &other) const; \
+    virtual string repr(unsigned int indent = 0) const; \
+    virtual node_type *clone() const
 
 
 struct NodeNull : Node {
     NodeNull() : Node(NodeType::NIL) {}
-    virtual bool operator==(const Node &other) const;
-    virtual string repr(unsigned int indent = 0) const;
-    virtual NodeNull *clone() const;
-};
-
-
-struct NodeBool : Node {
-    explicit NodeBool(bool value) : Node(NodeType::BOOL), value(value) {}
-    bool value;
-
-    NODE_COMMON_DECL(NodeBool);
-};
-
-
-struct NodeInt : Node {
-    explicit NodeInt(int64_t value) : Node(NodeType::INT), value(value) {}
-    int64_t value;
-
-    NODE_COMMON_DECL(NodeInt);
-};
-
-
-struct NodeFloat : Node {
-    explicit NodeFloat(double value) : Node(NodeType::FLOAT), value(value) {}
-    double value;
-
-    NODE_COMMON_DECL(NodeFloat);
-};
-
-
-struct NodeString : Node {
-    explicit NodeString(const string &value) : Node(NodeType::STRING), value(value) {}
-    string value;
-
-    NODE_COMMON_DECL(NodeString);
+    NODE_COMMON_DECL(NodeNull);
 };
 
 
 struct NodeList : Node {
     NodeList() : Node(NodeType::LIST) {}
-    vector<Node::Ptr> value;
-
     NODE_COMMON_DECL(NodeList);
+
+    vector<Node::Ptr> value;
 };
 
 
@@ -106,18 +102,18 @@ struct NodePair : Node {
     NodePair(NodeString::Ptr &&key, Node::Ptr &&value)
         : Node(NodeType::PAIR) , key(move(key)), value(move(value))
     {}
+    NODE_COMMON_DECL(NodePair);
+
     NodeString::Ptr key;
     Node::Ptr value;
-
-    NODE_COMMON_DECL(NodePair);
 };
 
 
 struct NodeObject : Node {
     NodeObject() : Node(NodeType::OBJECT) {}
-    vector<NodePair::Ptr> pairs;
-
     NODE_COMMON_DECL(NodeObject);
+
+    vector<NodePair::Ptr> pairs;
 };
 
 
@@ -162,6 +158,13 @@ private:
     void enter_object();
     void enter_object_item();
     void enter_pair();
+
+    template<class Tokenclass, class NodeClass>
+    void handle_simple_token(const Token &tok) {
+        NodeClass *node = new NodeClass(reinterpret_cast<const Tokenclass &>(tok).value);
+        this->nodes.emplace_back(node);
+        this->states.pop_back();
+    }
 };
 
 

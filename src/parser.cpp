@@ -29,29 +29,6 @@ NodeNull *NodeNull::clone() const {
 }
 
 
-#define SIMPLE_NODE_COMMON(node_type) \
-bool node_type::operator==(const Node &other) const { \
-    const node_type *node = dynamic_cast<const node_type *>(&other); \
-    if (node != nullptr) { \
-        return this->value == node->value; \
-    } else { \
-        return false; \
-    } \
-} \
-string node_type::repr(unsigned int indent) const { \
-    return string(indent * 4, ' ') + ::repr(this->value); \
-} \
-node_type *node_type::clone() const { \
-    return new node_type(this->value); \
-}
-
-
-SIMPLE_NODE_COMMON(NodeBool);
-SIMPLE_NODE_COMMON(NodeInt);
-SIMPLE_NODE_COMMON(NodeFloat);
-SIMPLE_NODE_COMMON(NodeString);
-
-
 bool NodeList::operator==(const Node &other) const {
     const NodeList *node = dynamic_cast<const NodeList *>(&other);
     if (node == nullptr) {
@@ -184,11 +161,6 @@ void Parser::feed(const Token &tok) {
     } else if (this->states.back() == ParserState::JSON) {
         this->states.back() = ParserState::JSON_END;
 
-#define HANDLE_SIMPLE_TOKEN(token_cls, node_cls) \
-        node_cls *node = new node_cls(reinterpret_cast<const token_cls &>(tok).value); \
-        this->nodes.emplace_back(node); \
-        this->states.pop_back()
-
         if (tok.type == TokenType::LSQUARE) {
             this->enter_list();
         } else if (tok.type == TokenType::LCURLY) {
@@ -197,21 +169,19 @@ void Parser::feed(const Token &tok) {
             this->nodes.emplace_back(new NodeNull());
             this->states.pop_back();
         } else if (tok.type == TokenType::BOOL) {
-            HANDLE_SIMPLE_TOKEN(TokenBool, NodeBool);
+            this->handle_simple_token<TokenBool, NodeBool>(tok);
         } else if (tok.type == TokenType::INT) {
-            HANDLE_SIMPLE_TOKEN(TokenInt, NodeInt);
+            this->handle_simple_token<TokenInt, NodeInt>(tok);
         } else if (tok.type == TokenType::FLOAT) {
-            HANDLE_SIMPLE_TOKEN(TokenFloat, NodeFloat);
+            this->handle_simple_token<TokenFloat, NodeFloat>(tok);
         } else if (tok.type == TokenType::STRING) {
-            HANDLE_SIMPLE_TOKEN(TokenString, NodeString);
+            this->handle_simple_token<TokenString, NodeString>(tok);
         } else {
             this->unexpected_token(tok, {
                 TokenType::LSQUARE, TokenType::LCURLY,
                 TokenType::INT, TokenType::FLOAT, TokenType::STRING,
             });
         }
-
-#undef HANDLE_SIMPLE_TOKEN
     } else if (this->states.back() == ParserState::JSON_END) {
         this->states.pop_back();
         this->feed(tok);
