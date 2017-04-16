@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <deque>
+#include <map>
 #include <memory>
 #include <string>
 
@@ -11,6 +12,7 @@
 
 
 using std::deque;
+using std::map;
 using std::string;
 using std::unique_ptr;
 
@@ -175,6 +177,8 @@ private:
     NumberState num_state;
     StringState string_state;
     IdState id_state;
+
+    static const map<char, char> escape_map;
 };
 
 

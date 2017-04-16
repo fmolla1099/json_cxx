@@ -27,6 +27,7 @@ vector<Token::Ptr> get_tokens(const string &str) {
         ans.push_back(move(tok));
     }
 
+    REQUIRE(!ans.empty());
     REQUIRE(ans.back()->type == TokenType::END);
     ans.pop_back();
     return ans;
@@ -98,6 +99,14 @@ TEST_CASE("Test Scanner basic") {
         {SourcePos(0, 16), SourcePos(0, 16)},
         {SourcePos(0, 17), SourcePos(0, 17)},
     });
+}
+
+
+TEST_CASE("Test Scanner string") {
+    check_tokens(
+        "\"\\b\\f\\n\\r\\t\\\"\\/\\\\\"",
+        {new TokenString("\b\f\n\r\t\"/\\")}
+    );
 }
 
 

@@ -310,17 +310,38 @@ void Scanner::st_string(char ch) {
             this->state = ScannerState::INIT;
         } else if (ch == '\\') {
             ss.state = StringSubState::ESCAPE;
+        } else if (ch == '\0') {
+            this->unknown_char(ch, "received \\0");
         } else {
+            // TODO: check the range of ch
             ss.value.push_back(ch);
         }
     } else if (ss.state == StringSubState::ESCAPE) {
-        assert(!"Unimplemented");
+        auto it = Scanner::escape_map.find(ch);
+        if (it != Scanner::escape_map.end()) {
+            ss.value.push_back(it->second);
+            ss.state = StringSubState::NORMAL;
+        } else {
+            assert(!"Unimplemented");
+        }
     } else if (ss.state == StringSubState::HEX) {
         assert(!"Unimplemented");
     } else {
         assert(!"Unreachable");
     }
 }
+
+
+const map<char, char> Scanner::escape_map {
+    {'b', '\b'},
+    {'f', '\f'},
+    {'n', '\n'},
+    {'r', '\r'},
+    {'t', '\t'},
+    {'"', '"'},
+    {'\\', '\\'},
+    {'/', '/'},
+};
 
 
 void Scanner::exception(const string &msg, SourcePos start, SourcePos end) {
@@ -335,7 +356,7 @@ void Scanner::exception(const string &msg, SourcePos start, SourcePos end) {
 
 
 void Scanner::unknown_char(char ch, const string &additional) {
-    string msg = "Unknown char: " + string (1, ch);
+    string msg = "Unknown char: " + string (1, ch); // TODO: escape ch
     if (!additional.empty()) {
         msg += ", " + additional;
     }
