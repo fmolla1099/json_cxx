@@ -30,6 +30,7 @@ struct Node {
     typedef unique_ptr<Node> Ptr;
 
     Node(NodeType type) : type(type) {}
+    virtual ~Node() {}
     virtual Node *clone() const = 0;
     virtual bool operator==(const Node &other) const = 0;
     virtual bool operator!=(const Node &other) const;
