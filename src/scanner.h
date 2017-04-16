@@ -16,17 +16,17 @@ using std::unique_ptr;
 
 
 enum class TokenType : char {
-    INT         = 'i',
-    FLOAT       = 'f',
-    STRING      = 's',
-    LBRACKET    = '[',
-    RBRACKET    = ']',
-    LBRACE      = '{',
-    RBRACE      = '}',
-    COMMA       = ',',
-    COLON       = ':',
-    COMMENT     = 'c',
-    END         = '$',
+    INT     = 'i',
+    FLOAT   = 'f',
+    STRING  = 's',
+    LSQUARE = '[',
+    RSQUARE = ']',
+    LCURLY  = '{',
+    RCURLY  = '}',
+    COMMA   = ',',
+    COLON   = ':',
+    COMMENT = 'c',
+    END     = '$',
 };
 
 

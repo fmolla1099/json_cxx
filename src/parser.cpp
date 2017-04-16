@@ -167,9 +167,9 @@ void Parser::feed(const Token &tok) {
         }
     } else if (this->states.back() == ParserState::JSON) {
         this->states.back() = ParserState::JSON_END;
-        if (tok.type == TokenType::LBRACKET) {
+        if (tok.type == TokenType::LSQUARE) {
             this->enter_list();
-        } else if (tok.type == TokenType::LBRACE) {
+        } else if (tok.type == TokenType::LCURLY) {
             this->enter_object();
         } else if (tok.type == TokenType::INT) {
             NodeInt *node = new NodeInt(reinterpret_cast<const TokenInt&>(tok).value);
@@ -185,7 +185,7 @@ void Parser::feed(const Token &tok) {
             this->states.pop_back();
         } else {
             this->unexpected_token(tok, {
-                TokenType::LBRACKET, TokenType::LBRACE,
+                TokenType::LSQUARE, TokenType::LCURLY,
                 TokenType::INT, TokenType::FLOAT, TokenType::STRING,
             });
         }
@@ -203,7 +203,7 @@ void Parser::feed(const Token &tok) {
     } else if (this->states.back() == ParserState::LIST) {
         NodeList *node = new NodeList();
         this->nodes.emplace_back(node);
-        if (tok.type == TokenType::RBRACKET) {
+        if (tok.type == TokenType::RSQUARE) {
             this->states.pop_back();
         } else {
             this->enter_list_item();
@@ -215,29 +215,29 @@ void Parser::feed(const Token &tok) {
         NodeList &list = reinterpret_cast<NodeList &>(*this->nodes.back());
         list.value.push_back(move(node));
 
-        if (tok.type == TokenType::RBRACKET) {
+        if (tok.type == TokenType::RSQUARE) {
             this->states.pop_back();
         } else if (tok.type == TokenType::COMMA) {
             this->enter_list_item();
         } else {
-            this->unexpected_token(tok, {TokenType::RBRACKET, TokenType::COMMA});
+            this->unexpected_token(tok, {TokenType::RSQUARE, TokenType::COMMA});
         }
     } else if (this->states.back() == ParserState::OBJECT) {
         NodeObject *node = new NodeObject();
         this->nodes.emplace_back(node);
-        if (tok.type == TokenType::RBRACE) {
+        if (tok.type == TokenType::RCURLY) {
             this->states.pop_back();
         } else {
             this->enter_object_item();
             this->feed(tok);
         }
     } else if (this->states.back() == ParserState::OBJECT_END) {
-        if (tok.type == TokenType::RBRACE) {
+        if (tok.type == TokenType::RCURLY) {
             this->states.pop_back();
         } else if (tok.type == TokenType::COMMA) {
             this->enter_object_item();
         } else {
-            this->unexpected_token(tok, {TokenType::RBRACE, TokenType::COMMA});
+            this->unexpected_token(tok, {TokenType::RCURLY, TokenType::COMMA});
         }
     } else if (this->states.back() == ParserState::PAIR) {
         if (tok.type == TokenType::COLON) {

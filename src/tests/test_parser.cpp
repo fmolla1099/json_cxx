@@ -96,7 +96,7 @@ TEST_CASE("Test parser throw") {
     try {
         parse("{[]: 1}");
     } catch (UnexpectedToken &exc) {
-        CHECK(exc.token->type == TokenType::LBRACKET);
+        CHECK(exc.token->type == TokenType::LSQUARE);
         CHECK(exc.token->start == SourcePos(0, 1));
         CHECK(exc.expected_types == decltype(exc.expected_types){TokenType::STRING});
     }
