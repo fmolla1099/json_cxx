@@ -21,6 +21,14 @@ using std::string;
 using std::to_string;
 
 
+Token *Token::clone() const {
+    Token *tok = new Token(this->type);
+    tok->start = this->start;
+    tok->end = this->end;
+    return tok;
+}
+
+
 string Token::name() const {
     return "Token:" + string(1, static_cast<char>(this->type));
 }

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
@@ -8,6 +9,7 @@
 #include "../parser.h"
 
 
+using std::find;
 using std::string;
 using std::vector;
 
@@ -86,6 +88,18 @@ TEST_CASE("Test parser") {
     CHECK(*parse("{\"a\": [1]}") == *O({
         P("a", LP({P(1)})),
     }));
+}
+
+
+TEST_CASE("Test parser throw") {
+    REQUIRE_THROWS_AS(parse("{[]: 1}"), UnexpectedToken);
+    try {
+        parse("{[]: 1}");
+    } catch (UnexpectedToken &exc) {
+        CHECK(exc.token->type == TokenType::LBRACKET);
+        CHECK(exc.token->start == SourcePos(0, 1));
+        CHECK(exc.expected_types == decltype(exc.expected_types){TokenType::STRING});
+    }
 }
 
 

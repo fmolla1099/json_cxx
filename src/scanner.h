@@ -34,7 +34,8 @@ class Token {
 public:
     typedef unique_ptr<Token> Ptr;
 
-    Token(TokenType type) : type(type) {}
+    explicit Token(TokenType type) : type(type) {}
+    virtual Token *clone() const;
     virtual string name() const;
     virtual string repr_value() const;
     virtual string repr_short() const;
@@ -57,13 +58,23 @@ REPR(Token) {
 template<class ValueType, TokenType tok_type>
 class ExtendedToken : public Token {
 public:
-    ExtendedToken(const ValueType &value) : Token(tok_type), value(value) {}
+    typedef ExtendedToken<ValueType, tok_type> _SelfType;
+    typedef unique_ptr<_SelfType> Ptr;
+
+    explicit ExtendedToken(const ValueType &value) : Token(tok_type), value(value) {}
 
     virtual string name() const;
     virtual string repr_value() const;
 
+    virtual ExtendedToken<ValueType, tok_type> *clone() const {
+        _SelfType *tok = new _SelfType(this->value);
+        tok->start = this->start;
+        tok->end = this->end;
+        return tok;
+    };
+
     virtual bool operator==(const Token &other) const {
-        auto tok = dynamic_cast<const ExtendedToken<ValueType, tok_type> *>(&other);
+        auto tok = dynamic_cast<const _SelfType *>(&other);
         if (tok != nullptr) {
             return this->value == tok->value;
         } else {

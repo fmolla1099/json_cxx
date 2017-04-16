@@ -299,10 +299,5 @@ void Parser::enter_pair() {
 
 
 void Parser::unexpected_token(const Token &tok, const vector<TokenType> &expected) {
-    string types;
-    for (TokenType tt : expected) {
-        types.push_back(static_cast<char>(tt));
-    }
-    string msg = "Unexpected token: " + repr(tok)  + ", expected types: '" + types + "'.";
-    throw ParserError(msg);
+    throw UnexpectedToken(tok, expected);
 }
