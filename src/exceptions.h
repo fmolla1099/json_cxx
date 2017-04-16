@@ -42,7 +42,7 @@ public:
 
 class ParserError : public BaseException {
 public:
-    ParserError(const string &msg)
+    explicit ParserError(const string &msg)
         : BaseException(msg, SourcePos(), SourcePos())
     {}
 };
