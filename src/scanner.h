@@ -54,37 +54,30 @@ REPR(Token) {
 }
 
 
-class TokenInt : public Token {
+template<class ValueType, TokenType tok_type>
+class ExtendedToken : public Token {
 public:
-    TokenInt(int64_t value) : Token(TokenType::INT), value(value) {}
+    ExtendedToken(const ValueType &value) : Token(tok_type), value(value) {}
+
     virtual string name() const;
     virtual string repr_value() const;
-    virtual bool operator==(const Token &other) const;
 
-    int64_t value;
+    virtual bool operator==(const Token &other) const {
+        auto tok = dynamic_cast<const ExtendedToken<ValueType, tok_type> *>(&other);
+        if (tok != nullptr) {
+            return this->value == tok->value;
+        } else {
+            return false;
+        }
+    }
+
+    ValueType value;
 };
 
 
-class TokenFloat : public Token {
-public:
-    TokenFloat(double value) : Token(TokenType::FLOAT), value(value) {}
-    virtual string name() const;
-    virtual string repr_value() const;
-    virtual bool operator==(const Token &other) const;
-
-    double value;
-};
-
-
-class TokenString : public Token {
-public:
-    TokenString(const string &value) : Token(TokenType::STRING), value(value) {}
-    virtual string name() const;
-    virtual string repr_value() const;
-    virtual bool operator==(const Token &other) const;
-
-    string value;
-};
+typedef ExtendedToken<int64_t, TokenType::INT> TokenInt;
+typedef ExtendedToken<double, TokenType::FLOAT> TokenFloat;
+typedef ExtendedToken<string, TokenType::STRING> TokenString;
 
 
 enum class ScannerState {

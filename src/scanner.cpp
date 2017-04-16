@@ -58,37 +58,37 @@ bool Token::operator!=(const Token &other) const {
 }
 
 
-#define DEFINE_TOKEN_COMMON(token_cls) \
-bool token_cls::operator==(const Token &other) const { \
-    const token_cls *tok = dynamic_cast<const token_cls *>(&other); \
-    if (tok != nullptr) { \
-        return this->value == tok->value; \
-    } else { \
-        return false; \
-    } \
-} \
-string token_cls::name() const { \
-    return #token_cls; \
+template<>
+string TokenInt::name() const {
+    return "Int";
 }
 
 
-DEFINE_TOKEN_COMMON(TokenInt)
-DEFINE_TOKEN_COMMON(TokenFloat)
-DEFINE_TOKEN_COMMON(TokenString)
-
-#undef DEFINE_TOKEN_COMMON
-
-
+template<>
 string TokenInt::repr_value() const {
     return to_string(this->value);
 }
 
 
+template<>
+string TokenFloat::name() const {
+    return "Float";
+}
+
+
+template<>
 string TokenFloat::repr_value() const {
     return to_string(this->value);
 }
 
 
+template<>
+string TokenString::name() const {
+    return "Str";
+}
+
+
+template<>
 string TokenString::repr_value() const {
     return this->value;
 }
