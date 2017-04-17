@@ -107,3 +107,45 @@ char *u8_write_char(char *buf, unichar ch) {
     int len = u8_char_len(ch);
     return _u8_write_char_with_len(buf, ch, len);
 }
+
+
+size_t u8_unicode_len(const char *s) {
+    size_t ans = 0;
+    for (const char *end = s; *end != '\0'; end += u8_read_char_len(end)) {
+        ans++;
+    }
+    return ans;
+}
+
+
+ustring u8_decode(const char *s) {
+    size_t len = u8_unicode_len(s);
+    ustring ans;
+    ans.reserve(len);
+    while (*s != '\0') {
+        int clen = u8_read_char_len(s);
+        ans.push_back(u8_read_char(s));
+        s += clen;
+    }
+    return ans;
+}
+
+
+size_t u8_byte_len(const ustring &us) {
+    size_t ans = 0;
+    for (unichar ch : us) {
+        ans += u8_char_len(ch);
+    }
+    return ans;
+}
+
+
+string u8_encode(const ustring &us) {
+    size_t len = u8_byte_len(us);
+    string ans(len, '\0');
+    char *data = const_cast<char *>(ans.data());
+    for (unichar ch : us) {
+        data = u8_write_char(data, ch);
+    }
+    return ans;
+}

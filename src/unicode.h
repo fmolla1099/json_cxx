@@ -35,6 +35,13 @@ int u8_read_char_len(const char *s);
 unichar u8_read_char(const char *s);
 int u8_char_len(unichar ch);
 char *u8_write_char(char *buf, unichar ch);
+size_t u8_unicode_len(const char *s);
+ustring u8_decode(const char *s);
+size_t u8_byte_len(const ustring &us);
+string u8_encode(const ustring &us);
+
+
+#define UCHAR u8_read_char
 
 
 #endif //JSON_CXX_UNICODE_H

@@ -47,3 +47,18 @@ TEST_CASE("Test unicode write char") {
     check_write_char("啊");
     check_write_char("\xf4\x8f\xbf\xbf");
 }
+
+
+void check_decode_encode(const string &input) {
+    ustring us = u8_decode(input.data());
+    string bytes = u8_encode(us);
+    CHECK(input == bytes);
+}
+
+
+TEST_CASE("Test unicode encode/decode") {
+    check_decode_encode("");
+    check_decode_encode("asdf");
+    check_decode_encode("asdf啊啊23545");
+    check_decode_encode("as±df");
+}
