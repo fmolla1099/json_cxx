@@ -323,19 +323,44 @@ void Scanner::st_string(CharConf::CharType ch) {
         } else if (ch == 'u') {
             ss.state = StringSubState::HEX;
         } else {
-            assert(!"Unimplemented");
+            this->unknown_char(ch, "unknown escapes");
         }
     } else if (ss.state == StringSubState::HEX) {
         if (ss.hex.size() == 4) {
-            int uch = strtol(ss.hex.data(), nullptr, 16);
-            ss.value.push_back(static_cast<CharConf::CharType>(uch));
+            StringSubState next_state = StringSubState::NORMAL;
+            unichar uch = static_cast<CharConf::CharType>(strtol(ss.hex.data(), nullptr, 16));
+            if (ss.last_surrogate) {
+                if (is_surrogate_low(uch)) {
+                    unichar hi = ss.value.back();
+                    ss.value.pop_back();
+                    uch = u16_assemble_surrogate(hi, uch);
+                } else {
+                    this->unknown_char(uch, "expect lower surrogate");
+                }
+                ss.last_surrogate = false;
+            } else {
+                if (is_surrogate_high(uch)) {
+                    ss.last_surrogate = true;
+                    next_state = StringSubState::SURROGATED;
+                } else if (is_surrogate_low(uch)) {
+                    this->unknown_char(uch, "unexpected lower surrogate");
+                }
+            }
+
+            ss.value.push_back(uch);
             ss.hex.clear();
-            ss.state = StringSubState::NORMAL;
+            ss.state = next_state;
             this->refeed(ch);
         } else if (is_xdigit(ch)) {
             ss.hex.push_back(static_cast<char>(to_lower(ch)));
         } else {
             this->unknown_char(ch, "expect hex digit");
+        }
+    } else if (ss.state == StringSubState::SURROGATED) {
+        if (ch == '\\') {
+            ss.state = StringSubState::ESCAPE;
+        } else {
+            this->unknown_char(ch, "expect lower surrogate escape");
         }
     } else {
         assert(!"Unreachable");

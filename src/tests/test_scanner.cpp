@@ -104,13 +104,29 @@ TEST_CASE("Test Scanner basic") {
 }
 
 
+void check_token_string(const string &str, const char *expect) {
+    check_tokens("\"" + str + "\"", {new TokenString(u8_decode(expect))});
+}
+
+
 TEST_CASE("Test Scanner string") {
-    check_tokens(
-        "\"\\b\\f\\n\\r\\t\\\"\\/\\\\\"",
-        {new TokenString(USTRING("\b\f\n\r\t\"/\\"))}
-    );
-    check_tokens("\"123啊abc\"", {new TokenString(USTRING("123啊abc"))});
-    check_tokens("\"\\u554a\\u00b1 \\u00b1\"", {new TokenString(USTRING("啊± ±"))});
+    check_token_string("\\b\\f\\n\\r\\t\\\"\\/\\\\", "\b\f\n\r\t\"/\\");
+    check_token_string("123啊abc", "123啊abc");
+    check_token_string("\\u554a\\u00b1 \\u00b1", "啊± ±");
+    check_token_string("\\ud852\\udf62", "𤭢");
+
+    CHECK_THROWS_AS(get_tokens("\""), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("\"a"), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("\"\\u123z"), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("\"\\u123"), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("\"\\z\""), TokenizerError);
+
+    // bad surrogate pair
+    CHECK_THROWS_AS(get_tokens("\"\\ud852\""), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("\"\\ud852.\""), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("\"\\ud852\\u000a\""), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("\"\\udf62\\u000a\""), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("\"\\udf62\""), TokenizerError);
 }
 
 

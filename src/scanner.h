@@ -143,6 +143,7 @@ enum class StringSubState {
     NORMAL,
     ESCAPE,
     HEX,
+    SURROGATED,
 };
 
 
@@ -150,6 +151,7 @@ struct StringState {
     StringSubState state = StringSubState::INIT;
     CharConf::StringType value;
     string hex;
+    bool last_surrogate = false;
 };
 
 
