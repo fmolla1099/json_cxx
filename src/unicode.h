@@ -44,6 +44,11 @@ bool is_space(unichar ch);
 bool is_digit(unichar ch);
 bool is_alpha(unichar ch);
 
+bool is_surrogate_high(unichar ch);
+bool is_surrogate_low(unichar ch);
+bool is_surrogate(unichar ch);
+unichar u16_assemble_surrogate(unichar hi, unichar lo);
+
 
 inline string repr(const ustring &us) {
     return u8_encode(us);   // TODO: escape

@@ -165,3 +165,25 @@ bool is_digit(unichar ch) {
 bool is_alpha(unichar ch) {
     return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z');
 }
+
+
+bool is_surrogate_high(unichar ch) {
+    return 0xd800 <= ch && ch <= 0xdbff;
+}
+
+
+bool is_surrogate_low(unichar ch) {
+    return 0xdc00 <= ch && ch <= 0xdfff;
+}
+
+
+bool is_surrogate(unichar ch) {
+    return is_surrogate_high(ch) || is_surrogate_low(ch);
+}
+
+
+unichar u16_assemble_surrogate(unichar hi, unichar lo) {
+    assert(is_surrogate_high(hi));
+    assert(is_surrogate_low(lo));
+    return (((hi - 0xd800) << 10) | (lo - 0xdc00)) + 0x010000;
+}
