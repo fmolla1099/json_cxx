@@ -233,6 +233,8 @@ void Scanner::st_number(CharConf::CharType ch) {
     } else if (ns.state == NumberSubState::ZEROED) {
         if (ch == '.') {
             ns.state = NumberSubState::DOTTED;
+        } else if (ch == 'e' || ch == 'E') {
+            ns.state = NumberSubState::EXP;
         } else {
             this->finish_num(ch);
         }
