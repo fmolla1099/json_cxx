@@ -28,7 +28,7 @@ public:
     bool operator==(const SourcePos &other) const;
     bool operator!=(const SourcePos &other) const;
     bool is_valid() const;
-    void add_char(char ch);
+    void add_char(unsigned int ch);
 };
 
 

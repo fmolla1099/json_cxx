@@ -1,5 +1,4 @@
 #include <cassert>
-#include <cctype>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
@@ -110,18 +109,18 @@ string TokenString::name() const {
 
 template<>
 string TokenString::repr_value() const {
-    return this->value;
+    return u8_encode(this->value);  // TODO: escape
 }
 
 
-void Scanner::feed(char ch) {
+void Scanner::feed(CharConf::CharType ch) {
     this->prev_pos = this->cur_pos;
     this->cur_pos.add_char(ch);
     this->refeed(ch);
 }
 
 
-void Scanner::refeed(char ch) {
+void Scanner::refeed(CharConf::CharType ch) {
     switch (this->state) {
         case ScannerState::INIT:
             return this->st_init(ch);
@@ -149,7 +148,7 @@ Token::Ptr Scanner::pop() {
 }
 
 
-void Scanner::st_init(char ch) {
+void Scanner::st_init(CharConf::CharType ch) {
     this->start_pos = this->cur_pos;
     if (ch == '\0') {
         Token *tok = new Token(TokenType::END);
@@ -157,9 +156,9 @@ void Scanner::st_init(char ch) {
         tok->end = this->cur_pos;
         this->buffer.emplace_back(tok);
         this->state = ScannerState::ENDED;
-    } else if (isspace(ch)) {
+    } else if (is_space(ch)) {
         // pass
-    } else if (string("[]{},:").find(ch) != string::npos) {
+    } else if (USTRING("[]{},:").find(ch) != ustring::npos) {
         Token *tok = new Token(static_cast<TokenType>(ch));
         tok->start = this->cur_pos;
         tok->end = this->cur_pos;
@@ -167,10 +166,10 @@ void Scanner::st_init(char ch) {
     } else if (ch == '"') {
         this->state = ScannerState::STRING;
         this->refeed(ch);
-    } else if (isdigit(ch) || ch == '.' || ch == '+' || ch == '-') {
+    } else if (is_digit(ch) || ch == '.' || ch == '+' || ch == '-') {
         this->state = ScannerState::NUMBER;
         this->refeed(ch);
-    } else if (isalpha(ch)) {
+    } else if (is_alpha(ch)) {
         this->state = ScannerState::ID;
         this->refeed(ch);
     } else {
@@ -179,16 +178,16 @@ void Scanner::st_init(char ch) {
 }
 
 
-void Scanner::st_id(char ch) {
-    if (isalpha(ch)) {
+void Scanner::st_id(CharConf::CharType ch) {
+    if (is_alpha(ch)) {
         this->id_state.value.push_back(ch);
     } else {
         Token *tok = nullptr;
-        if (this->id_state.value == "null") {
+        if (this->id_state.value == USTRING("null")) {
             tok = new Token(TokenType::NIL);
-        } else if (this->id_state.value == "true") {
+        } else if (this->id_state.value == USTRING("true")) {
             tok = new TokenBool(true);
-        } else if (this->id_state.value == "false") {
+        } else if (this->id_state.value == USTRING("false")) {
             tok = new TokenBool(false);
         } else {
             assert(!this->id_state.value.empty());
@@ -204,7 +203,7 @@ void Scanner::st_id(char ch) {
             this->refeed(ch);
         } else {
             this->exception(
-                "bad identifier: '" + this->id_state.value + "', "
+                "bad identifier: '" + u8_encode(this->id_state.value) + "', "
                 "expect null|true|false",
                 this->start_pos, this->prev_pos
             );
@@ -213,7 +212,7 @@ void Scanner::st_id(char ch) {
 }
 
 
-void Scanner::st_number(char ch) {
+void Scanner::st_number(CharConf::CharType ch) {
     NumberState &ns = this->num_state;
     if (ns.state == NumberSubState::INIT) {
         ns.state = NumberSubState::SIGNED;
@@ -225,8 +224,8 @@ void Scanner::st_number(char ch) {
             this->st_number(ch);
         }
     } else if (ns.state == NumberSubState::SIGNED) {
-        if (isdigit(ch)) {
-            ns.int_digits.push_back(ch);
+        if (is_digit(ch)) {
+            ns.int_digits.push_back(static_cast<char>(ch));
             ns.state = NumberSubState::INT_DIGIT;
         } else if (ch == '.') {
             ns.has_dot = true;
@@ -235,8 +234,8 @@ void Scanner::st_number(char ch) {
             this->unknown_char(ch, "expect dot or digit");
         }
     } else if (ns.state == NumberSubState::INT_DIGIT) {
-        if (isdigit(ch)) {
-            ns.int_digits.push_back(ch);
+        if (is_digit(ch)) {
+            ns.int_digits.push_back(static_cast<char>(ch));
         } else if (ch == '.') {
             ns.has_dot = true;
             ns.state = NumberSubState::DOTTED;
@@ -246,15 +245,15 @@ void Scanner::st_number(char ch) {
             this->finish_num(ch);
         }
     } else if (ns.state == NumberSubState::LEADING_DOT) {
-        if (isdigit(ch)) {
-            ns.dot_digits.push_back(ch);
+        if (is_digit(ch)) {
+            ns.dot_digits.push_back(static_cast<char>(ch));
             ns.state = NumberSubState::DOTTED;
         } else {
             this->unknown_char(ch, "expect digit");
         }
     } else if (ns.state == NumberSubState::DOTTED) {
-        if (isdigit(ch)) {
-            ns.dot_digits.push_back(ch);
+        if (is_digit(ch)) {
+            ns.dot_digits.push_back(static_cast<char>(ch));
         } else if (ch == 'e' || ch == 'E') {
             ns.state = NumberSubState::EXP;
         } else {
@@ -266,22 +265,22 @@ void Scanner::st_number(char ch) {
             if (ch == '-') {
                 ns.exp_sign = -1;
             }
-        } else if (isdigit(ch)) {
-            ns.exp_digits.push_back(ch);
+        } else if (is_digit(ch)) {
+            ns.exp_digits.push_back(static_cast<char>(ch));
             ns.state = NumberSubState::EXP_DIGIT;
         } else {
             this->unknown_char(ch, "expect digit or sign");
         }
     } else if (ns.state == NumberSubState::EXP_SIGNED) {
-        if (isdigit(ch)) {
-            ns.exp_digits.push_back(ch);
+        if (is_digit(ch)) {
+            ns.exp_digits.push_back(static_cast<char>(ch));
             ns.state = NumberSubState::EXP_DIGIT;
         } else {
             this->unknown_char(ch, "expect digit");
         }
     } else if (ns.state == NumberSubState::EXP_DIGIT) {
-        if (isdigit(ch)) {
-            ns.exp_digits.push_back(ch);
+        if (is_digit(ch)) {
+            ns.exp_digits.push_back(static_cast<char>(ch));
         } else {
             this->finish_num(ch);
         }
@@ -291,7 +290,7 @@ void Scanner::st_number(char ch) {
 }
 
 
-void Scanner::st_string(char ch) {
+void Scanner::st_string(CharConf::CharType ch) {
     StringState &ss = this->string_state;
     if (ss.state == StringSubState::INIT) {
         if (ch != '"') {
@@ -332,7 +331,7 @@ void Scanner::st_string(char ch) {
 }
 
 
-const map<char, char> Scanner::escape_map {
+const map<CharConf::CharType, CharConf::CharType> Scanner::escape_map {
     {'b', '\b'},
     {'f', '\f'},
     {'n', '\n'},
@@ -355,8 +354,8 @@ void Scanner::exception(const string &msg, SourcePos start, SourcePos end) {
 }
 
 
-void Scanner::unknown_char(char ch, const string &additional) {
-    string msg = "Unknown char: " + string (1, ch); // TODO: escape ch
+void Scanner::unknown_char(CharConf::CharType ch, const string &additional) {
+    string msg = "Unknown char: " + u8_encode({ch}); // TODO: escape ch
     if (!additional.empty()) {
         msg += ", " + additional;
     }
@@ -364,7 +363,7 @@ void Scanner::unknown_char(char ch, const string &additional) {
 }
 
 
-void Scanner::finish_num(char ch) {
+void Scanner::finish_num(CharConf::CharType ch) {
     Token *tok = this->num_state.to_token();
     tok->start = this->start_pos;
     tok->end = this->prev_pos;
@@ -381,7 +380,7 @@ Token *NumberState::to_token() const {
     double fv = iv;
 
     double div = 10;
-    for (char ch : this->dot_digits) {
+    for (auto ch : this->dot_digits) {
         fv += (ch - '0') / div;
         div *= 10;
     }

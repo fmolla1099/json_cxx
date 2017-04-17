@@ -40,8 +40,18 @@ ustring u8_decode(const char *s);
 size_t u8_byte_len(const ustring &us);
 string u8_encode(const ustring &us);
 
+bool is_space(unichar ch);
+bool is_digit(unichar ch);
+bool is_alpha(unichar ch);
 
-#define UCHAR u8_read_char
+
+inline string repr(const ustring &us) {
+    return u8_encode(us);   // TODO: escape
+}
+
+
+#define UCHAR u8_read_char  // convert a string literal to unichar
+#define USTRING u8_decode   // convert a string literal to ustring
 
 
 #endif //JSON_CXX_UNICODE_H

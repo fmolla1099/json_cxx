@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "scanner.h"
+#include "unicode.h"
 
 
 using std::move;
@@ -74,7 +75,7 @@ struct SimpleNode : Node {
 typedef SimpleNode<bool, NodeType::BOOL> NodeBool;
 typedef SimpleNode<int64_t, NodeType::INT> NodeInt;
 typedef SimpleNode<double, NodeType::FLOAT> NodeFloat;
-typedef SimpleNode<string, NodeType::STRING> NodeString;
+typedef SimpleNode<ustring, NodeType::STRING> NodeString;
 
 
 #define NODE_COMMON_DECL(node_type) \

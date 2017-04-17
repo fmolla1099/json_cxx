@@ -7,6 +7,7 @@
 #include "../exceptions.h"
 #include "../scanner.h"
 #include "../parser.h"
+#include "../unicode.h"
 
 
 using std::find;
@@ -20,7 +21,7 @@ NodeInt *P(int value) {
 
 
 NodePair *P(const string &key, Node *value) {
-    auto ret = new NodePair(NodeString::Ptr(new NodeString(key)), Node::Ptr());
+    auto ret = new NodePair(NodeString::Ptr(new NodeString(u8_decode(key.data()))), Node::Ptr());
     ret->value.reset(value);
     return ret;
 }
@@ -55,8 +56,9 @@ NodeObject::Ptr O(const vector<NodePair *> &pairs) {
 
 
 Node::Ptr parse(const string &str) {
+    ustring us = u8_decode(str.data());
     Scanner scanner;
-    for (char ch : str) {
+    for (auto ch : us) {
         scanner.feed(ch);
     }
     scanner.feed('\0');
@@ -83,9 +85,9 @@ TEST_CASE("Test parser") {
 
     CHECK(*parse("{}") == *O({}));
     CHECK(*parse("{\"a\": 1}") == *O({P("a", P(1))}));
-    CHECK(*parse("{\"a\": 1, \"b\": 2}") == *O({
+    CHECK(*parse("{\"a\": 1, \"啊\": 2}") == *O({
         P("a", P(1)),
-        P("b", P(2)),
+        P("啊", P(2)),
     }));
 
     CHECK(*parse("{\"a\": [1]}") == *O({

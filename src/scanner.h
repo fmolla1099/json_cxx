@@ -9,12 +9,19 @@
 #include <string>
 
 #include "sourcepos.h"
+#include "unicode.h"
 
 
 using std::deque;
 using std::map;
 using std::string;
 using std::unique_ptr;
+
+
+struct CharConf {
+    typedef unichar CharType;
+    typedef ustring StringType;
+};
 
 
 enum class TokenType : char {
@@ -93,7 +100,7 @@ public:
 typedef ExtendedToken<bool, TokenType::BOOL> TokenBool;
 typedef ExtendedToken<int64_t, TokenType::INT> TokenInt;
 typedef ExtendedToken<double, TokenType::FLOAT> TokenFloat;
-typedef ExtendedToken<string, TokenType::STRING> TokenString;
+typedef ExtendedToken<CharConf::StringType, TokenType::STRING> TokenString;
 
 
 enum class ScannerState {
@@ -141,32 +148,32 @@ enum class StringSubState {
 
 struct StringState {
     StringSubState state = StringSubState::INIT;
-    string value;
+    CharConf::StringType value;
 };
 
 
 struct IdState {
-    string value;
+    CharConf::StringType value;
 };
 
 
 class Scanner {
 public:
-    void feed(char ch);
+    void feed(CharConf::CharType ch);
     Token::Ptr pop();
 
 private:
-    void refeed(char ch);
-    void st_init(char ch);
-    void st_id(char ch);
-    void st_number(char ch);
-    void st_string(char ch);
-    void finish_num(char ch);
+    void refeed(CharConf::CharType ch);
+    void st_init(CharConf::CharType ch);
+    void st_id(CharConf::CharType ch);
+    void st_number(CharConf::CharType ch);
+    void st_string(CharConf::CharType ch);
+    void finish_num(CharConf::CharType ch);
     void exception(
         const string &msg,
         SourcePos start = SourcePos(), SourcePos end = SourcePos()
     );
-    void unknown_char(char ch, const string &additional = "");
+    void unknown_char(CharConf::CharType ch, const string &additional = "");
 
     ScannerState state = ScannerState::INIT;
     deque<Token::Ptr> buffer;
@@ -178,7 +185,7 @@ private:
     StringState string_state;
     IdState id_state;
 
-    static const map<char, char> escape_map;
+    static const map<CharConf::CharType, CharConf::CharType> escape_map;
 };
 
 

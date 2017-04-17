@@ -149,3 +149,19 @@ string u8_encode(const ustring &us) {
     }
     return ans;
 }
+
+
+bool is_space(unichar ch) {
+    // \t\n\v\f\r and space
+    return ('\t' <= ch && ch <= '\r') || ch == ' ';
+}
+
+
+bool is_digit(unichar ch) {
+    return '0' <= ch && ch <= '9';
+}
+
+
+bool is_alpha(unichar ch) {
+    return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z');
+}

@@ -18,7 +18,7 @@ bool SourcePos::is_valid() const {
     return this->lineno >= 0 && this->rowno >= 0;
 }
 
-void SourcePos::add_char(char ch) {
+void SourcePos::add_char(unsigned int ch) {
     if (this->last_newline) {
         this->lineno++;
         this->rowno = 0;

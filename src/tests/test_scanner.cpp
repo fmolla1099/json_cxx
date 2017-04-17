@@ -6,6 +6,7 @@
 #include "../exceptions.h"
 #include "../scanner.h"
 #include "../sourcepos.h"
+#include "../unicode.h"
 
 
 using std::move;
@@ -15,8 +16,9 @@ using std::vector;
 
 
 vector<Token::Ptr> get_tokens(const string &str) {
+    ustring us = u8_decode(str.data());
     Scanner scanner;
-    for (char ch : str) {
+    for (auto ch : us) {
         scanner.feed(ch);
     }
     scanner.feed('\0');
@@ -73,7 +75,7 @@ TEST_CASE("Test Scanner basic") {
     auto tokens = check_tokens(" -12.5e-1 ", {new TokenFloat(-1.25)});
     check_tokens_pos(tokens, {{SourcePos(0, 1), SourcePos(0, 8)}});
 
-    tokens = check_tokens("\"asdf\"", {new TokenString("asdf")});
+    tokens = check_tokens("\"asdf\"", {new TokenString(USTRING("asdf"))});
     check_tokens_pos(tokens, {{SourcePos(0, 0), SourcePos(0, 5)}});
 
     tokens = check_tokens("null true false", {
@@ -105,8 +107,9 @@ TEST_CASE("Test Scanner basic") {
 TEST_CASE("Test Scanner string") {
     check_tokens(
         "\"\\b\\f\\n\\r\\t\\\"\\/\\\\\"",
-        {new TokenString("\b\f\n\r\t\"/\\")}
+        {new TokenString(USTRING("\b\f\n\r\t\"/\\"))}
     );
+    check_tokens("\"123啊abc\"", {new TokenString(USTRING("123啊abc"))});
 }
 
 
