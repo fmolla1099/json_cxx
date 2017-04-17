@@ -218,20 +218,24 @@ void Scanner::st_number(CharConf::CharType ch) {
         ns.state = NumberSubState::SIGNED;
         if (ch == '-') {
             ns.num_sign = -1;
-        } else if (ch == '+') {
-            // pass
         } else {
             this->st_number(ch);
         }
     } else if (ns.state == NumberSubState::SIGNED) {
-        if (is_digit(ch)) {
+        if (ch == '0') {
+            ns.state = NumberSubState::ZEROED;
+        } else if (is_digit(ch)) {
             ns.int_digits.push_back(static_cast<char>(ch));
             ns.state = NumberSubState::INT_DIGIT;
-        } else if (ch == '.') {
-            ns.has_dot = true;
-            ns.state = NumberSubState::LEADING_DOT;
         } else {
-            this->unknown_char(ch, "expect dot or digit");
+            this->unknown_char(ch, "expect digit");
+        }
+    } else if (ns.state == NumberSubState::ZEROED) {
+        if (ch == '.') {
+            ns.has_dot = true;
+            ns.state = NumberSubState::DOTTED;
+        } else {
+            this->finish_num(ch);
         }
     } else if (ns.state == NumberSubState::INT_DIGIT) {
         if (is_digit(ch)) {
@@ -244,14 +248,14 @@ void Scanner::st_number(CharConf::CharType ch) {
         } else {
             this->finish_num(ch);
         }
-    } else if (ns.state == NumberSubState::LEADING_DOT) {
+    } else if (ns.state == NumberSubState::DOTTED) {
         if (is_digit(ch)) {
             ns.dot_digits.push_back(static_cast<char>(ch));
-            ns.state = NumberSubState::DOTTED;
+            ns.state = NumberSubState::DOT_DIGIT;
         } else {
             this->unknown_char(ch, "expect digit");
         }
-    } else if (ns.state == NumberSubState::DOTTED) {
+    } else if (ns.state == NumberSubState::DOT_DIGIT) {
         if (is_digit(ch)) {
             ns.dot_digits.push_back(static_cast<char>(ch));
         } else if (ch == 'e' || ch == 'E') {

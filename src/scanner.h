@@ -115,9 +115,10 @@ enum class ScannerState {
 enum class NumberSubState {
     INIT,
     SIGNED,
+    ZEROED,
     INT_DIGIT,
     DOTTED,
-    LEADING_DOT,
+    DOT_DIGIT,
     EXP,
     EXP_SIGNED,
     EXP_DIGIT,
