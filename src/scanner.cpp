@@ -311,10 +311,9 @@ void Scanner::st_string(CharConf::CharType ch) {
             this->state = ScannerState::INIT;
         } else if (ch == '\\') {
             ss.state = StringSubState::ESCAPE;
-        } else if (ch == '\0') {
-            this->unknown_char(ch, "received \\0");
+        } else if (ch < 0x20) {
+            this->unknown_char(ch, "unescaped control char");
         } else {
-            // TODO: check the range of ch
             ss.value.push_back(ch);
         }
     } else if (ss.state == StringSubState::ESCAPE) {
