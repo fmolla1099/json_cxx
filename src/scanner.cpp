@@ -156,9 +156,9 @@ void Scanner::st_init(CharConf::CharType ch) {
         tok->end = this->cur_pos;
         this->buffer.emplace_back(tok);
         this->state = ScannerState::ENDED;
-    } else if (is_space(ch)) {
+    } else if (USTRING(" \t\n\r").find(ch) != ustring::npos) {  // space
         // pass
-    } else if (USTRING("[]{},:").find(ch) != ustring::npos) {
+    } else if (USTRING("[]{},:").find(ch) != ustring::npos) {   // single char token
         Token *tok = new Token(static_cast<TokenType>(ch));
         tok->start = this->cur_pos;
         tok->end = this->cur_pos;
