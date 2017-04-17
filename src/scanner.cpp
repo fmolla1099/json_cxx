@@ -232,7 +232,6 @@ void Scanner::st_number(CharConf::CharType ch) {
         }
     } else if (ns.state == NumberSubState::ZEROED) {
         if (ch == '.') {
-            ns.has_dot = true;
             ns.state = NumberSubState::DOTTED;
         } else {
             this->finish_num(ch);
@@ -241,7 +240,6 @@ void Scanner::st_number(CharConf::CharType ch) {
         if (is_digit(ch)) {
             ns.int_digits.push_back(static_cast<char>(ch));
         } else if (ch == '.') {
-            ns.has_dot = true;
             ns.state = NumberSubState::DOTTED;
         } else if (ch == 'e' || ch == 'E') {
             ns.state = NumberSubState::EXP;
@@ -435,7 +433,7 @@ Token *NumberState::to_token() const {
     iv *= this->num_sign;
     fv *= this->num_sign;
 
-    if (!this->has_dot && this->exp_sign > 0
+    if (this->dot_digits.empty() && this->exp_sign > 0
         && numeric_limits<int64_t>::min() < fv && fv < numeric_limits<int64_t>::max())
     {
         return new TokenInt(iv);

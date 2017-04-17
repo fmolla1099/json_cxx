@@ -133,7 +133,6 @@ struct NumberState {
     string exp_digits;
     int num_sign = 1;
     int exp_sign = 1;
-    bool has_dot = false;
 
     Token *to_token() const;
 };
