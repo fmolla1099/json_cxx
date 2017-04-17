@@ -162,8 +162,21 @@ bool is_digit(unichar ch) {
 }
 
 
+bool is_xdigit(unichar ch) {
+    return is_digit(ch) || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F');
+}
+
+
 bool is_alpha(unichar ch) {
     return ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z');
+}
+
+
+unichar to_lower(unichar ch) {
+    if ('A' <= ch && ch <= 'Z') {
+        ch -= 'A' - 'a';
+    }
+    return ch;
 }
 
 

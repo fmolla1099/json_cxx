@@ -149,6 +149,7 @@ enum class StringSubState {
 struct StringState {
     StringSubState state = StringSubState::INIT;
     CharConf::StringType value;
+    string hex;
 };
 
 

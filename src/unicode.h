@@ -42,7 +42,10 @@ string u8_encode(const ustring &us);
 
 bool is_space(unichar ch);
 bool is_digit(unichar ch);
+bool is_xdigit(unichar ch);
 bool is_alpha(unichar ch);
+
+unichar to_lower(unichar ch);
 
 bool is_surrogate_high(unichar ch);
 bool is_surrogate_low(unichar ch);

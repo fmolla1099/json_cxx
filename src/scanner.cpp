@@ -320,11 +320,23 @@ void Scanner::st_string(CharConf::CharType ch) {
         if (it != Scanner::escape_map.end()) {
             ss.value.push_back(it->second);
             ss.state = StringSubState::NORMAL;
+        } else if (ch == 'u') {
+            ss.state = StringSubState::HEX;
         } else {
             assert(!"Unimplemented");
         }
     } else if (ss.state == StringSubState::HEX) {
-        assert(!"Unimplemented");
+        if (ss.hex.size() == 4) {
+            int uch = strtol(ss.hex.data(), nullptr, 16);
+            ss.value.push_back(static_cast<CharConf::CharType>(uch));
+            ss.hex.clear();
+            ss.state = StringSubState::NORMAL;
+            this->refeed(ch);
+        } else if (is_xdigit(ch)) {
+            ss.hex.push_back(static_cast<char>(to_lower(ch)));
+        } else {
+            this->unknown_char(ch, "expect hex digit");
+        }
     } else {
         assert(!"Unreachable");
     }

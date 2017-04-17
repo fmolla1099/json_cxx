@@ -110,6 +110,7 @@ TEST_CASE("Test Scanner string") {
         {new TokenString(USTRING("\b\f\n\r\t\"/\\"))}
     );
     check_tokens("\"123啊abc\"", {new TokenString(USTRING("123啊abc"))});
+    check_tokens("\"\\u554a\\u00b1 \\u00b1\"", {new TokenString(USTRING("啊± ±"))});
 }
 
 
