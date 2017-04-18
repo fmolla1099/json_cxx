@@ -7,9 +7,6 @@
 using std::ostringstream;
 
 
-static Formatter g_default_formatter;
-
-
 bool Node::operator!=(const Node &other) const {
     return !(*this == other);
 }

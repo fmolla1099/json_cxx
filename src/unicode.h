@@ -53,11 +53,6 @@ bool is_surrogate(unichar ch);
 unichar u16_assemble_surrogate(unichar hi, unichar lo);
 
 
-inline string repr(const ustring &us) {
-    return u8_encode(us);   // TODO: escape
-}
-
-
 #define UCHAR u8_read_char  // convert a string literal to unichar
 #define USTRING u8_decode   // convert a string literal to ustring
 

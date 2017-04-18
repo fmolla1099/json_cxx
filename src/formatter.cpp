@@ -11,6 +11,9 @@ using std::all_of;
 using std::string;
 
 
+Formatter g_default_formatter;
+
+
 ostream &Formatter::format(ostream &os, const Node &node) {
     FormatContext ctx(this->opt);
     this->do_node(os, node, ctx);
@@ -61,7 +64,7 @@ void Formatter::do_int(ostream &os, const NodeInt &node, FormatContext &ctx) {
 
 void Formatter::do_float(ostream &os, const NodeFloat &node, FormatContext &ctx) {
     this->do_indent(os, ctx);
-    os << to_string(node.value);
+    os << to_string(node.value);    // TODO: handle overflow, precision
 }
 
 

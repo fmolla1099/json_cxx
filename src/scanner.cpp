@@ -6,8 +6,9 @@
 #include <string>
 #include <utility>
 
-#include "scanner.h"
 #include "exceptions.h"
+#include "scanner.h"
+#include "node.h"
 #include "utils.hpp"
 
 
@@ -109,11 +110,12 @@ string TokenString::name() const {
 
 template<>
 string TokenString::repr_value() const {
-    return u8_encode(this->value);  // TODO: escape
+    return NodeString(this->value).repr();
 }
 
 
 void Scanner::feed(CharConf::CharType ch) {
+    // TODO: limit stack depth
     this->prev_pos = this->cur_pos;
     this->cur_pos.add_char(ch);
     this->refeed(ch);
@@ -179,6 +181,7 @@ void Scanner::st_init(CharConf::CharType ch) {
 
 
 void Scanner::st_id(CharConf::CharType ch) {
+    // TODO: limit length
     if (is_alpha(ch)) {
         this->id_state.value.push_back(ch);
     } else {
@@ -213,6 +216,7 @@ void Scanner::st_id(CharConf::CharType ch) {
 
 
 void Scanner::st_number(CharConf::CharType ch) {
+    // TODO: limit length
     NumberState &ns = this->num_state;
     if (ns.state == NumberSubState::INIT) {
         ns.state = NumberSubState::SIGNED;
@@ -295,6 +299,7 @@ void Scanner::st_number(CharConf::CharType ch) {
 
 
 void Scanner::st_string(CharConf::CharType ch) {
+    // TODO: limit length
     StringState &ss = this->string_state;
     if (ss.state == StringSubState::INIT) {
         if (ch != '"') {
@@ -395,7 +400,7 @@ void Scanner::exception(const string &msg, SourcePos start, SourcePos end) {
 
 
 void Scanner::unknown_char(CharConf::CharType ch, const string &additional) {
-    string msg = "Unknown char: " + u8_encode({ch}); // TODO: escape ch
+    string msg = "Unknown char: " + NodeString({ch}).repr();
     if (!additional.empty()) {
         msg += ", " + additional;
     }
@@ -422,11 +427,11 @@ Token *NumberState::to_token() const {
     double div = 10;
     for (auto ch : this->dot_digits) {
         fv += (ch - '0') / div;
-        div *= 10;
+        div *= 10;  // TODO: check overflow
     }
 
     if (!this->exp_digits.empty()) {
-        int exp = atoi(this->exp_digits.data()) * this->exp_sign;
+        int exp = atoi(this->exp_digits.data()) * this->exp_sign;   // TODO: check overflow
         fv *= pow(10, exp);
         iv *= pow(10, exp);
     }
@@ -439,6 +444,6 @@ Token *NumberState::to_token() const {
     {
         return new TokenInt(iv);
     } else {
-        return new TokenFloat(fv);
+        return new TokenFloat(fv);  // TODO: handle inf
     }
 }
