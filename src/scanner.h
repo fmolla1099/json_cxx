@@ -144,6 +144,7 @@ enum class StringSubState {
     ESCAPE,
     HEX,
     SURROGATED,
+    SURROGATED_ESCAPE,
 };
 
 

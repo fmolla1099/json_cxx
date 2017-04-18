@@ -118,6 +118,7 @@ size_t u8_unicode_len(const char *s) {
 }
 
 
+// TODO: reject overlong encoding
 ustring u8_decode(const char *s) {
     size_t len = u8_unicode_len(s);
     ustring ans;

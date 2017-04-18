@@ -127,6 +127,7 @@ TEST_CASE("Test Scanner string") {
     CHECK_THROWS_AS(get_tokens("\"\\ud852\\u000a\""), TokenizerError);
     CHECK_THROWS_AS(get_tokens("\"\\udf62\\u000a\""), TokenizerError);
     CHECK_THROWS_AS(get_tokens("\"\\udf62\""), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("\"\\uD800\\n\""), TokenizerError);
 }
 
 

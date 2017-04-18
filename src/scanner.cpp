@@ -366,7 +366,13 @@ void Scanner::st_string(CharConf::CharType ch) {
         }
     } else if (ss.state == StringSubState::SURROGATED) {
         if (ch == '\\') {
-            ss.state = StringSubState::ESCAPE;
+            ss.state = StringSubState::SURROGATED_ESCAPE;
+        } else {
+            this->unknown_char(ch, "expect lower surrogate escape");
+        }
+    } else if (ss.state == StringSubState::SURROGATED_ESCAPE) {
+        if (ch == 'u') {
+            ss.state = StringSubState::HEX;
         } else {
             this->unknown_char(ch, "expect lower surrogate escape");
         }
