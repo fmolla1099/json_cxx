@@ -216,7 +216,7 @@ string Formatter::quote_char(unichar ch, const FormatOption &opt) {
     } else if (ch == '\t') {
         return "\\t";
     } else if (ch < 0x20) {
-        return string_fmt("\\u%4x", ch);
+        return string_fmt("\\u%04x", ch);
     } else {
         return u8_encode({ch});
     }

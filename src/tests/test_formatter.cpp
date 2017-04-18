@@ -33,6 +33,8 @@ TEST_CASE("Test Formatter string") {
     check_string_fmt("\\n");
     check_string_fmt("啊");
     check_string_fmt("\\u554a", "啊");
+    check_string_fmt("\\u0001");
+    check_string_fmt("\\u0000");
 }
 
 
