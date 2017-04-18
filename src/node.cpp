@@ -1,4 +1,13 @@
+#include <sstream>
+
 #include "node.h"
+#include "formatter.h"
+
+
+using std::ostringstream;
+
+
+static Formatter g_default_formatter;
 
 
 bool Node::operator!=(const Node &other) const {
@@ -6,13 +15,15 @@ bool Node::operator!=(const Node &other) const {
 }
 
 
-bool NodeNull::operator==(const Node &other) const {
-    return this->type == other.type;
+string Node::repr() const {
+    ostringstream os;
+    g_default_formatter.format(os, *this);
+    return os.str();
 }
 
 
-string NodeNull::repr(unsigned int indent) const {
-    return string(indent * 4, ' ') + "null";
+bool NodeNull::operator==(const Node &other) const {
+    return this->type == other.type;
 }
 
 
@@ -38,22 +49,6 @@ bool NodeList::operator==(const Node &other) const {
 }
 
 
-string NodeList::repr(unsigned int indent) const {
-    string ans;
-    ans += string(indent * 4, ' ') + "[\n";
-    for (size_t i = 0; i < this->value.size(); ++i) {
-        ans += this->value[i]->repr(indent + 1);
-        if (i != this->value.size() - 1) {
-            ans += ",\n";
-        } else {
-            ans += "\n";
-        }
-    }
-    ans += string(indent * 4, ' ') + "]";
-    return ans;
-}
-
-
 NodeList *NodeList::clone() const {
     NodeList *list = new NodeList();
     for (const Node::Ptr &child : this->value) {
@@ -69,11 +64,6 @@ bool NodePair::operator==(const Node &other) const {
         return false;
     }
     return *this->key == *node->key && *this->value == *node->value;
-}
-
-
-string NodePair::repr(unsigned int indent) const {
-    return string(indent * 4, ' ') + this->key->repr() + ":\n" + this->value->repr(indent + 1);
 }
 
 
@@ -99,22 +89,6 @@ bool NodeObject::operator==(const Node &other) const {
         }
     }
     return true;
-}
-
-
-string NodeObject::repr(unsigned int indent) const {
-    string ans;
-    ans += string(indent * 4, ' ') + "{\n";
-    for (size_t i = 0; i < this->pairs.size(); ++i) {
-        ans += this->pairs[i]->repr(indent + 1);
-        if (i != this->pairs.size() - 1) {
-            ans += ",\n";
-        } else {
-            ans += "\n";
-        }
-    }
-    ans += string(indent * 4, ' ') + "}";
-    return ans;
 }
 
 

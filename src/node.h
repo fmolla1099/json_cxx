@@ -35,7 +35,7 @@ struct Node {
     virtual Node *clone() const = 0;
     virtual bool operator==(const Node &other) const = 0;
     virtual bool operator!=(const Node &other) const;
-    virtual string repr(unsigned int indent = 0) const = 0;
+    string repr() const;
 
     NodeType type;
 };
@@ -58,10 +58,6 @@ struct SimpleNode : Node {
         return node != nullptr && this->value == node->value;
     }
 
-    virtual string repr(unsigned int indent = 0) const {
-        return string(indent * 4, ' ') + ::repr(this->value);
-    }
-
     virtual _SelfType *clone() const {
         return new _SelfType(this->value);
     }
@@ -79,7 +75,6 @@ typedef SimpleNode<ustring, NodeType::STRING> NodeString;
 #define NODE_COMMON_DECL(node_type) \
     typedef unique_ptr<node_type> Ptr; \
     virtual bool operator==(const Node &other) const; \
-    virtual string repr(unsigned int indent = 0) const; \
     virtual node_type *clone() const
 
 
