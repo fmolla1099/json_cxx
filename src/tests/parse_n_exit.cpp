@@ -9,6 +9,7 @@
 #include "../unicode.h"
 #include "../scanner.h"
 #include "../parser.h"
+#include "helper.h"
 
 
 using namespace std;
@@ -25,22 +26,6 @@ enum class ValidateResult : int {
 string read_file(const string &path) {
     ifstream file(path);
     return string(istreambuf_iterator<char>(file), istreambuf_iterator<char>());
-}
-
-
-vector<Token::Ptr> get_tokens(const ustring &str) {
-    Scanner scanner;
-    for (auto ch : str) {
-        scanner.feed(ch);
-    }
-    scanner.feed('\0');
-
-    vector<Token::Ptr> ans;
-    Token::Ptr tok;
-    while ((tok = scanner.pop())) {
-        ans.emplace_back(move(tok));
-    }
-    return ans;
 }
 
 
