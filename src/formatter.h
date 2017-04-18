@@ -30,7 +30,8 @@ private: \
 
 
 class FormatOption {
-    DEFINE_FMT_OPT(int, indent, 4);
+    DEFINE_FMT_OPT(unsigned int, indent, 4);
+    DEFINE_FMT_OPT(bool, use_tab, false);
     // DEFINE_FMT_OPT(bool, always_newline, false);
 };
 

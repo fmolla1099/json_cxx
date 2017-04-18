@@ -104,4 +104,12 @@ TEST_CASE("Test FormatterOption") {
         "]",
         FormatOption().indent(2)
     );
+    check_fmt(
+        "[[1, 2, 3], 4]",
+        "[\n"
+        "\t[1, 2, 3],\n"
+        "\t4\n"
+        "]",
+        FormatOption().use_tab(true)
+    );
 }

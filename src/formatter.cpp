@@ -150,7 +150,11 @@ void Formatter::do_list_like(
 
 void Formatter::do_indent(ostream &os, FormatContext &ctx) {
     if (ctx.newline) {
-        os << string(ctx.level * ctx.opt.indent(), ' ');
+        if (ctx.opt.use_tab()) {
+            os << string(ctx.level, '\t');
+        } else {
+            os << string(ctx.level * ctx.opt.indent(), ' ');
+        }
     }
 }
 
