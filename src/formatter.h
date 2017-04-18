@@ -65,7 +65,7 @@ private:
 
 class Formatter {
 public:
-    Formatter(const FormatOption &opt) : opt(opt) {}
+    Formatter(const FormatOption &opt = FormatOption()) : opt(opt) {}
     ostream &format(ostream &os, const Node &node);
 
 protected:

@@ -1,20 +1,13 @@
-#include <sstream>
 #include "catch.hpp"
 
 #include "helper.h"
 #include "../formatter.h"
 
 
-using std::ostringstream;
-
-
 void check_fmt(const string &input, const string &output, FormatOption opt = FormatOption())
 {
     Node::Ptr node = parse_string(input);
-    auto fmtter = Formatter(opt);
-    ostringstream os;
-    fmtter.format(os, *node);
-    CHECK(os.str() == output);
+    CHECK(format_node(*node, opt) == output);
 }
 
 

@@ -29,12 +29,16 @@ string read_file(const string &path) {
 }
 
 
-bool parse(const vector<Token::Ptr> &tokens) {
+Node::Ptr parse(const vector<Token::Ptr> &tokens) {
     Parser parser;
     for (const Token::Ptr &tok : tokens) {
         parser.feed(*tok);
     }
-    return parser.is_finished();
+    if (parser.is_finished()) {
+        return parser.pop_result();
+    } else {
+        return Node::Ptr();
+    }
 }
 
 
@@ -57,18 +61,20 @@ ValidateResult validate_file(const string &path) {
         return ValidateResult::TOKENIZE_ERROR;
     }
 
-    bool parse_ok;
+    Node::Ptr node;
     try {
-        parse_ok = parse(tokens);
+        node = parse(tokens);
     } catch (ParserError &exc) {
         cerr << "ParserError: " << exc.what() << endl;
         return ValidateResult::PARSE_ERROR;
     }
-    if (!parse_ok) {
+    if (!node) {
         cerr << "Parser not finished" << endl;
         return ValidateResult::PARSE_ERROR;
     }
 
+    string formated = format_node(*node);
+    cout << formated << endl;
     return ValidateResult::SUCCESS;
 }
 

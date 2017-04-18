@@ -1,4 +1,9 @@
+#include <sstream>
+
 #include "helper.h"
+
+
+using std::ostringstream;
 
 
 vector<Token::Ptr> get_tokens(const ustring &str) {
@@ -24,4 +29,12 @@ Node::Ptr parse_string(const string &input) {
         parser.feed(*tok);
     }
     return parser.pop_result();
+}
+
+
+string format_node(const Node &node, const FormatOption &opt) {
+    Formatter fmtter(opt);
+    ostringstream os;
+    fmtter.format(os, node);
+    return os.str();
 }
