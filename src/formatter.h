@@ -14,10 +14,6 @@ using std::ostream;
 using std::vector;
 
 
-class Formatter;
-extern Formatter g_default_formatter;
-
-
 #define DEFINE_OPTION(Class, Type, name, default_value) \
 public: \
     const Type &name() const { return _ ## name; } \

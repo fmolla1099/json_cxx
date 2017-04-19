@@ -14,7 +14,7 @@ bool Node::operator!=(const Node &other) const {
 
 string Node::repr() const {
     ostringstream os;
-    g_default_formatter.format(os, *this);
+    Formatter().format(os, *this);
     return os.str();
 }
 

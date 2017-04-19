@@ -11,9 +11,6 @@ using std::all_of;
 using std::string;
 
 
-Formatter g_default_formatter;
-
-
 ostream &Formatter::format(ostream &os, const Node &node) {
     FormatContext ctx(this->opt);
     this->do_node(os, node, ctx);
