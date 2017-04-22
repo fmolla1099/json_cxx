@@ -30,6 +30,18 @@ string read_file(const string &path) {
 }
 
 
+// http://stackoverflow.com/a/202097/3886899
+string read_stdin() {
+    // don't skip the whitespace while reading
+    cin >> std::noskipws;
+
+    // use stream iterators to copy the stream to a string
+    istream_iterator<char> it(cin);
+    istream_iterator<char> end;
+    return string(it, end);
+}
+
+
 Node::Ptr parse(const vector<Token::Ptr> &tokens) {
     Parser parser;
     for (const Token::Ptr &tok : tokens) {
@@ -44,7 +56,12 @@ Node::Ptr parse(const vector<Token::Ptr> &tokens) {
 
 
 ValidateResult validate_file(const string &path) {
-    string content = read_file(path);
+    string content;
+    if (path == "-") {
+        content = read_stdin();
+    } else {
+        content = read_file(path);
+    }
 
     ustring us;
     try {

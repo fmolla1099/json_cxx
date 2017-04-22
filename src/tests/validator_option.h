@@ -17,7 +17,7 @@ public:
 
 struct ValidatorOption {
     // options: ('file',), arg_type: ArgType.ONE
-    std::string file;
+    std::string file = "-";
 
     std::string to_string() const;
     bool operator==(const ValidatorOption &rhs) const;

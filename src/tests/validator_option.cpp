@@ -50,7 +50,7 @@ ValidatorOption ValidatorOption::parse_args(const std::vector<std::string> &args
 
     // check required options
     // check positional args
-    if (position_count < 1) {
+    if (position_count < 0) {
         throw ArgError("expect more argument");
     }
     return ans;
