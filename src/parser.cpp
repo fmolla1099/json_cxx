@@ -62,7 +62,7 @@ void Parser::feed(const Token &tok) {
         this->feed(tok);
     } else if (this->states.back() == ParserState::STRING) {
         if (tok.type == TokenType::STRING) {
-            NodeString *node = new NodeString(reinterpret_cast<const TokenString&>(tok).value);
+            NodeString *node = new NodeString(static_cast<const TokenString&>(tok).value);
             this->nodes.emplace_back(node);
             this->states.pop_back();
         } else {
@@ -80,7 +80,7 @@ void Parser::feed(const Token &tok) {
     } else if (this->states.back() == ParserState::LIST_END) {
         Node::Ptr node = move(this->nodes.back());
         this->nodes.pop_back();
-        NodeList &list = reinterpret_cast<NodeList &>(*this->nodes.back());
+        NodeList &list = static_cast<NodeList &>(*this->nodes.back());
         list.value.push_back(move(node));
 
         if (tok.type == TokenType::RSQUARE) {
@@ -121,7 +121,7 @@ void Parser::feed(const Token &tok) {
         this->nodes.pop_back();
         assert(key->type == NodeType::STRING);
 
-        NodeObject &obj = reinterpret_cast<NodeObject &>(*this->nodes.back());
+        NodeObject &obj = static_cast<NodeObject &>(*this->nodes.back());
         NodePair *pair = new NodePair(NodeString::Ptr(key), Node::Ptr(value));
         obj.pairs.emplace_back(pair);
 

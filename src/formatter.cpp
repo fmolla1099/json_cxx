@@ -21,21 +21,21 @@ ostream &Formatter::format(ostream &os, const Node &node) {
 void Formatter::do_node(ostream &os, const Node &node, FormatContext &ctx) {
     switch (node.type) {
     case NodeType::NIL:
-        return this->do_null(os, reinterpret_cast<const NodeNull &>(node), ctx);
+        return this->do_null(os, static_cast<const NodeNull &>(node), ctx);
     case NodeType::BOOL:
-        return this->do_bool(os, reinterpret_cast<const NodeBool &>(node), ctx);
+        return this->do_bool(os, static_cast<const NodeBool &>(node), ctx);
     case NodeType::INT:
-        return this->do_int(os, reinterpret_cast<const NodeInt &>(node), ctx);
+        return this->do_int(os, static_cast<const NodeInt &>(node), ctx);
     case NodeType::FLOAT:
-        return this->do_float(os, reinterpret_cast<const NodeFloat &>(node), ctx);
+        return this->do_float(os, static_cast<const NodeFloat &>(node), ctx);
     case NodeType::STRING:
-        return this->do_string(os, reinterpret_cast<const NodeString &>(node), ctx);
+        return this->do_string(os, static_cast<const NodeString &>(node), ctx);
     case NodeType::LIST:
-        return this->do_list(os, reinterpret_cast<const NodeList &>(node), ctx);
+        return this->do_list(os, static_cast<const NodeList &>(node), ctx);
     case NodeType::PAIR:
-        return this->do_pair(os, reinterpret_cast<const NodePair &>(node), ctx);
+        return this->do_pair(os, static_cast<const NodePair &>(node), ctx);
     case NodeType::OBJECT:
-        return this->do_object(os, reinterpret_cast<const NodeObject &>(node), ctx);
+        return this->do_object(os, static_cast<const NodeObject &>(node), ctx);
     }
     assert(!"Unreachable");
 }
@@ -173,10 +173,10 @@ bool Formatter::is_simple_node(const Node &node) {
     {
         return true;
     } else if (node.type == NodeType::LIST) {
-        const auto &list = reinterpret_cast<const NodeList &>(node);
+        const auto &list = static_cast<const NodeList &>(node);
         return Formatter::is_simple_list(list);
     } else if (node.type == NodeType::OBJECT) {
-        const auto &obj = reinterpret_cast<const NodeObject &>(node);
+        const auto &obj = static_cast<const NodeObject &>(node);
         return obj.pairs.empty();
     } else {
         return false;

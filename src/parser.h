@@ -46,7 +46,7 @@ private:
 
     template<class Tokenclass, class NodeClass>
     void handle_simple_token(const Token &tok) {
-        NodeClass *node = new NodeClass(reinterpret_cast<const Tokenclass &>(tok).value);
+        NodeClass *node = new NodeClass(static_cast<const Tokenclass &>(tok).value);
         this->nodes.emplace_back(node);
         this->states.pop_back();
     }
