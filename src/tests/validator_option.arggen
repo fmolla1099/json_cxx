@@ -1,0 +1,3 @@
+ValidatorOption = [
+    arg('file'),
+]

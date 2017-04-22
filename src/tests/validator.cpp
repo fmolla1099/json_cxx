@@ -10,6 +10,7 @@
 #include "../scanner.h"
 #include "../parser.h"
 #include "helper.h"
+#include "validator_option.h"
 
 
 using namespace std;
@@ -79,12 +80,15 @@ ValidateResult validate_file(const string &path) {
 }
 
 
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        cerr << "expect a file name as argument" << endl;
+int main(int argc, const char *argv[]) {
+    ValidatorOption option;
+    try {
+        option = ValidatorOption::parse_argv(argc, argv);
+    } catch (ArgError &exc) {
+        cerr << "ArgError: " << exc.what() << endl;
         return 5;
     }
 
-    ValidateResult result = validate_file(argv[1]);
+    ValidateResult result = validate_file(option.file);
     return static_cast<int>(result);
 }
