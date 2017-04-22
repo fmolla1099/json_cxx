@@ -31,11 +31,11 @@ ValidatorOption ValidatorOption::parse_args(const std::vector<std::string> &args
         const std::string &piece = args[i];
         if (piece.size() > 2 && piece[0] == '-' && piece[1] == '-') {
             // long options
-            throw ArgError("Unknown option " + piece);
+            throw ArgError("Unknown option: " + piece);
         } else if (piece.size() >= 2 && piece[0] == '-') {
             // short options
             for (auto it = piece.begin() + 1; it != piece.end(); ++it) {
-                throw ArgError("Unknown flag :" + *it);
+                throw ArgError("Unknown flag: " + std::string(1, *it));
             }
         } else {
             // positional args
