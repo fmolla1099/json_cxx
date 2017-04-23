@@ -73,13 +73,16 @@ bool is_empty_line(const string &line) {
 void highlight_last_line(
     const SourcePos &start, const SourcePos &end, bool leading_caret = true, size_t prompt_len = 0)
 {
-    if (prompt_len > 0) {
-        cerr << string(prompt_len - 1, '!') << " ";
-    }
     assert(start.is_valid());
     assert(end.is_valid());
     assert(end.rowno >= start.rowno);
+
+    if (prompt_len > 0) {
+        cerr << string(prompt_len - 1, '!') << " ";
+    }
+
     cerr << string((size_t)start.rowno, ' ');
+
     if (leading_caret) {
         cerr << "^";
     }
@@ -127,6 +130,7 @@ void interactive_repl() {
                 cerr << typeid(exc).name() << ": " << exc.what() << endl;
             }
 
+            // prepare for next json input
             val.reset();
             is_ready = true;
             continue;
@@ -135,6 +139,7 @@ void interactive_repl() {
         if (val.is_finished()) {
             is_ready = true;
 
+            // pretty print json
             stringstream buf;
             Formatter().format(buf, *val.pop_result());
 
