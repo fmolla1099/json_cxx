@@ -42,8 +42,10 @@ public:
 
 class ParserError : public BaseException {
 public:
-    explicit ParserError(const string &msg)
-        : BaseException(msg, SourcePos(), SourcePos())
+    explicit ParserError(
+        const string &msg, const SourcePos &start = SourcePos(), const SourcePos &end = SourcePos()
+    )
+        : BaseException(msg, start, end)
     {}
 };
 
@@ -51,7 +53,7 @@ public:
 class UnexpectedToken : public ParserError {
 public:
     UnexpectedToken(const Token &token, const vector<TokenType> &expected_types)
-        : ParserError(make_msg(token, expected_types)),
+        : ParserError(make_msg(token, expected_types), token.start, token.end),
           token(token.clone()), expected_types(expected_types)
     {}
 
