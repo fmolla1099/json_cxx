@@ -163,6 +163,7 @@ enum class ValidateResult : int {
     UNICODE_ERROR = 10,
     TOKENIZE_ERROR,
     PARSE_ERROR,
+    UNKNOWN,
 };
 
 
@@ -184,6 +185,10 @@ ValidateResult validate_stream(istream &input) {
             return ValidateResult::PARSE_ERROR;
         } catch (exception &exc) {
             cerr << "Unknown exception: " << typeid(exc).name() << ": " << exc.what() << endl;
+            return ValidateResult::UNKNOWN;
+        } catch (...) {
+            cerr << "Unknown non-exeption caught" << endl;
+            return ValidateResult::UNKNOWN;
         }
     }
 
