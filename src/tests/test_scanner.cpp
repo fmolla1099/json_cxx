@@ -1,3 +1,4 @@
+#include <cmath>
 #include <string>
 #include <utility>
 #include <vector>
@@ -9,6 +10,7 @@
 #include "../unicode.h"
 
 
+using std::isinf;
 using std::move;
 using std::pair;
 using std::string;
@@ -104,10 +106,19 @@ TEST_CASE("Test Scanner basic") {
 }
 
 
+double get_float(const string &input) {
+    auto token = get_tokens(input);
+    REQUIRE(token.size() == 1);
+    TokenFloat *tok = dynamic_cast<TokenFloat *>(token[0].get());
+    REQUIRE(tok != nullptr);
+    return tok->value;
+}
+
+
 TEST_CASE("Test scanner number") {
     // overflow
-    auto token = get_tokens("123123123123123123123123123123");
-    CHECK(dynamic_cast<TokenFloat *>(token[0].get())->value == Approx(1.23123E+29));
+    CHECK(get_float("123123123123123123123123123123") == Approx(1.23123E+29));
+    CHECK(isinf(get_float("0.4e006699999999999999999999999999999999999999999999999999999")));
 }
 
 

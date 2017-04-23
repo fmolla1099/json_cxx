@@ -426,12 +426,22 @@ void Scanner::finish_num(CharConf::CharType ch) {
 }
 
 
+static double huge_int(const string &digits) {
+    double val = 0;
+    for (auto ch : digits) {
+        val *= 10;
+        val += ch - '0';
+    }
+    return val;
+}
+
+
 Token *NumberState::to_token() const {
     int64_t iv = 0;
     double fv = 0;
     for (auto ch : this->int_digits) {
         iv *= 10;
-        fv *= 10;
+        fv *= 10;       // inf
         iv += ch - '0';
         fv += ch - '0';
     }
@@ -439,12 +449,12 @@ Token *NumberState::to_token() const {
     double div = 10;
     for (auto ch : this->dot_digits) {
         fv += (ch - '0') / div;
-        div *= 10;
+        div *= 10;      // inf
     }
 
     if (!this->exp_digits.empty()) {
-        int exp = atoi(this->exp_digits.data()) * this->exp_sign;   // TODO: check overflow
-        fv *= pow(10, exp);
+        double exp = huge_int(this->exp_digits) * this->exp_sign;    // inf
+        fv *= pow(10, exp);     // inf
         iv *= pow(10, exp);
     }
 
