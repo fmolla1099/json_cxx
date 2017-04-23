@@ -28,6 +28,11 @@ bool Parser::is_finished() const {
 }
 
 
+void Parser::reset() {
+    *this = Parser();
+}
+
+
 void Parser::feed(const Token &tok) {
     if (this->states.empty()) {
         if (tok.type != TokenType::END) {

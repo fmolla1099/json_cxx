@@ -165,6 +165,7 @@ class Scanner {
 public:
     void feed(CharConf::CharType ch);
     Token::Ptr pop();
+    void reset();
 
 private:
     void refeed(CharConf::CharType ch);

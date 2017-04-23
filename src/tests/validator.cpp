@@ -43,8 +43,8 @@ public:
     }
 
     void reset() {
-        this->scanner = Scanner();
-        this->parser = Parser();
+        this->scanner.reset();
+        this->parser.reset();
     }
 
 private:

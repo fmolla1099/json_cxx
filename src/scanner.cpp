@@ -147,6 +147,11 @@ Token::Ptr Scanner::pop() {
 }
 
 
+void Scanner::reset() {
+    *this = Scanner();
+}
+
+
 void Scanner::st_init(CharConf::CharType ch) {
     this->start_pos = this->cur_pos;
     if (ch == '\0') {

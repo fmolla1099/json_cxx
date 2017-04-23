@@ -31,6 +31,7 @@ public:
     void feed(const Token &tok);
     Node::Ptr pop_result();
     bool is_finished() const;
+    void reset();
 
 private:
     vector<ParserState> states;
