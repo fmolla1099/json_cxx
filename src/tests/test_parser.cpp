@@ -61,7 +61,9 @@ Node::Ptr parse(const string &str) {
     for (auto ch : us) {
         scanner.feed(ch);
     }
-    scanner.feed('\0');
+    // Feed a space to force the termination of last token.
+    // In order to test Parser::is_finished(), no end mark should be generated.
+    scanner.feed(' ');
 
     Parser parser;
     Token::Ptr tok;

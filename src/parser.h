@@ -43,6 +43,7 @@ private:
     void enter_object();
     void enter_object_item();
     void enter_pair();
+    void leave();
 
     template<class Tokenclass, class NodeClass>
     void handle_simple_token(const Token &tok) {

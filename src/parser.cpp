@@ -42,7 +42,7 @@ void Parser::feed(const Token &tok) {
             this->enter_object();
         } else if (tok.type == TokenType::NIL) {
             this->nodes.emplace_back(new NodeNull());
-            this->states.pop_back();
+            this->leave();
         } else if (tok.type == TokenType::BOOL) {
             this->handle_simple_token<TokenBool, NodeBool>(tok);
         } else if (tok.type == TokenType::INT) {
@@ -58,13 +58,13 @@ void Parser::feed(const Token &tok) {
             });
         }
     } else if (this->states.back() == ParserState::JSON_END) {
-        this->states.pop_back();
+        this->leave();
         this->feed(tok);
     } else if (this->states.back() == ParserState::STRING) {
         if (tok.type == TokenType::STRING) {
             NodeString *node = new NodeString(static_cast<const TokenString&>(tok).value);
             this->nodes.emplace_back(node);
-            this->states.pop_back();
+            this->leave();
         } else {
             this->unexpected_token(tok, {TokenType::STRING});
         }
@@ -72,7 +72,7 @@ void Parser::feed(const Token &tok) {
         NodeList *node = new NodeList();
         this->nodes.emplace_back(node);
         if (tok.type == TokenType::RSQUARE) {
-            this->states.pop_back();
+            this->leave();
         } else {
             this->enter_list_item();
             this->feed(tok);
@@ -84,7 +84,7 @@ void Parser::feed(const Token &tok) {
         list.value.push_back(move(node));
 
         if (tok.type == TokenType::RSQUARE) {
-            this->states.pop_back();
+            this->leave();
         } else if (tok.type == TokenType::COMMA) {
             this->enter_list_item();
         } else {
@@ -94,14 +94,14 @@ void Parser::feed(const Token &tok) {
         NodeObject *node = new NodeObject();
         this->nodes.emplace_back(node);
         if (tok.type == TokenType::RCURLY) {
-            this->states.pop_back();
+            this->leave();
         } else {
             this->enter_object_item();
             this->feed(tok);
         }
     } else if (this->states.back() == ParserState::OBJECT_END) {
         if (tok.type == TokenType::RCURLY) {
-            this->states.pop_back();
+            this->leave();
         } else if (tok.type == TokenType::COMMA) {
             this->enter_object_item();
         } else {
@@ -125,7 +125,7 @@ void Parser::feed(const Token &tok) {
         NodePair *pair = new NodePair(NodeString::Ptr(key), Node::Ptr(value));
         obj.pairs.emplace_back(pair);
 
-        this->states.pop_back();
+        this->leave();
         this->feed(tok);
     } else {
         assert(!"Unreachable");
@@ -163,6 +163,13 @@ void Parser::enter_object_item() {
 void Parser::enter_pair() {
     this->states.push_back(ParserState::PAIR);
     this->states.push_back(ParserState::STRING);
+}
+
+
+void Parser::leave() {
+    do {
+        this->states.pop_back();
+    } while (!this->states.empty() && this->states.back() == ParserState::JSON_END);
 }
 
 
