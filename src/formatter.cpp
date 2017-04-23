@@ -55,7 +55,7 @@ void Formatter::do_bool(ostream &os, const NodeBool &node, FormatContext &ctx) {
 
 void Formatter::do_int(ostream &os, const NodeInt &node, FormatContext &ctx) {
     this->do_indent(os, ctx);
-    os << to_string(node.value);
+    os << to_string(node.value);    // TODO: handle overflow, precision
 }
 
 

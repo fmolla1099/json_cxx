@@ -427,13 +427,19 @@ void Scanner::finish_num(CharConf::CharType ch) {
 
 
 Token *NumberState::to_token() const {
-    int64_t iv = atoll(this->int_digits.data());
-    double fv = iv;
+    int64_t iv = 0;
+    double fv = 0;
+    for (auto ch : this->int_digits) {
+        iv *= 10;
+        fv *= 10;
+        iv += ch - '0';
+        fv += ch - '0';
+    }
 
     double div = 10;
     for (auto ch : this->dot_digits) {
         fv += (ch - '0') / div;
-        div *= 10;  // TODO: check overflow
+        div *= 10;
     }
 
     if (!this->exp_digits.empty()) {

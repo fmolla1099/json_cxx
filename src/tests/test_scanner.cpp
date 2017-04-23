@@ -104,6 +104,13 @@ TEST_CASE("Test Scanner basic") {
 }
 
 
+TEST_CASE("Test scanner number") {
+    // overflow
+    auto token = get_tokens("123123123123123123123123123123");
+    CHECK(dynamic_cast<TokenFloat *>(token[0].get())->value == Approx(1.23123E+29));
+}
+
+
 void check_token_string(const string &str, const char *expect) {
     check_tokens("\"" + str + "\"", {new TokenString(u8_decode(expect))});
 }
