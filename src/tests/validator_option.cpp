@@ -7,8 +7,8 @@
 
 
 bool ValidatorOption::operator==(const ValidatorOption &rhs) const {
-    return std::tie(this->file) \
-        == std::tie(rhs.file);
+    return std::tie(this->file, this->interactive) \
+        == std::tie(rhs.file, rhs.interactive);
 }
 bool ValidatorOption::operator!=(const ValidatorOption &rhs) const {
     return !(*this == rhs);
@@ -17,6 +17,8 @@ bool ValidatorOption::operator!=(const ValidatorOption &rhs) const {
 
 std::string ValidatorOption::to_string() const {
     std::string ans = "<ValidatorOption";
+    ans += " interactive=";
+    ans += this->interactive ? "true" : "false";
     ans += " file=";
     ans += '"' + this->file + '"';
     return ans + ">";
@@ -31,11 +33,19 @@ ValidatorOption ValidatorOption::parse_args(const std::vector<std::string> &args
         const std::string &piece = args[i];
         if (piece.size() > 2 && piece[0] == '-' && piece[1] == '-') {
             // long options
-            throw ArgError("Unknown option: " + piece);
+            if (piece == "--interactive") {
+                ans.interactive = true;
+            } else {
+                throw ArgError("Unknown option: " + piece);
+            }
         } else if (piece.size() >= 2 && piece[0] == '-') {
             // short options
             for (auto it = piece.begin() + 1; it != piece.end(); ++it) {
-                throw ArgError("Unknown flag: " + std::string(1, *it));
+                if (*it == 'i') {
+                    ans.interactive = true;
+                } else {
+                    throw ArgError("Unknown flag: " + std::string(1, *it));
+                }
             }
         } else {
             // positional args

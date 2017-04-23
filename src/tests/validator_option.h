@@ -18,6 +18,8 @@ public:
 struct ValidatorOption {
     // options: ('file',), arg_type: ArgType.ONE
     std::string file = "-";
+    // options: ('-i', '--interactive'), arg_type: ArgType.BOOL
+    bool interactive = false;
 
     std::string to_string() const;
     bool operator==(const ValidatorOption &rhs) const;
