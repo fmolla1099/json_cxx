@@ -114,17 +114,22 @@ void interactive_repl() {
 
         try {
             val.feed_line(line);
-        } catch (TokenizerError &exc) {
-            highlight_last_line(exc.start, exc.end, false, prompt.size());
-            cerr << "TokenizerError: " << exc.what() << endl;
-            goto ERROR;
-        } catch(ParserError &exc) {
-            highlight_last_line(exc.start, exc.end, true, prompt.size());
-            cerr << "ParserError: " << exc.what() << endl;
-            goto ERROR;
         } catch (exception &exc) {
-            cerr << typeid(exc).name() << ": " << exc.what() << endl;
-            goto ERROR;
+            try {
+                throw;
+            } catch (TokenizerError &exc) {
+                highlight_last_line(exc.start, exc.end, false, prompt.size());
+                cerr << "TokenizerError: " << exc.what() << endl;
+            } catch(ParserError &exc) {
+                highlight_last_line(exc.start, exc.end, true, prompt.size());
+                cerr << "ParserError: " << exc.what() << endl;
+            } catch (exception &exc) {
+                cerr << typeid(exc).name() << ": " << exc.what() << endl;
+            }
+
+            val.reset();
+            is_ready = true;
+            continue;
         }
 
         if (val.is_finished()) {
@@ -141,11 +146,6 @@ void interactive_repl() {
         } else {
             is_ready = false;
         }
-        continue;
-
-    ERROR:
-        val.reset();
-        is_ready = true;
     }
 
     // print a new line after ctrl-d
