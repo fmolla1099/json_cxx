@@ -1,6 +1,5 @@
 #include <cassert>
 #include <cmath>
-#include <cstdlib>
 #include <limits>
 #include <memory>
 #include <string>
@@ -12,8 +11,6 @@
 #include "utils.hpp"
 
 
-using std::atoll;
-using std::atoi;
 using std::move;
 using std::numeric_limits;
 using std::pow;
@@ -426,8 +423,9 @@ void Scanner::finish_num(CharConf::CharType ch) {
 }
 
 
-static double huge_int(const string &digits) {
-    double val = 0;
+template<class T>
+static T string_to_number(const string &digits) {
+    T val = 0;
     for (auto ch : digits) {
         val *= 10;
         val += ch - '0';
@@ -437,23 +435,14 @@ static double huge_int(const string &digits) {
 
 
 Token *NumberState::to_token() const {
-    int64_t iv = 0;
-    double fv = 0;
-    for (auto ch : this->int_digits) {
-        iv *= 10;
-        fv *= 10;       // inf
-        iv += ch - '0';
-        fv += ch - '0';
-    }
+    int64_t iv = string_to_number<int64_t>(this->int_digits);
+    double fv = string_to_number<double>(this->int_digits);
 
-    double div = 10;
-    for (auto ch : this->dot_digits) {
-        fv += (ch - '0') / div;
-        div *= 10;      // inf
-    }
+    fv += string_to_number<double>(this->dot_digits) \
+        * pow(10, -static_cast<double>(this->dot_digits.size()));
 
     if (!this->exp_digits.empty()) {
-        double exp = huge_int(this->exp_digits) * this->exp_sign;    // inf
+        double exp = string_to_number<double>(this->exp_digits) * this->exp_sign;   // inf
         fv *= pow(10, exp);     // inf
         iv *= pow(10, exp);
     }
