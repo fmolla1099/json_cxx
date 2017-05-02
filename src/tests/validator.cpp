@@ -319,14 +319,24 @@ int main(int argc, const char *argv[]) {
     }
 
     if (option.interactive) {
-        if (option.file != "-") {
+        if (!(option.files.empty() || option.files == vector<string> {"-"})) {
             cerr << "can not specify argument in interactive mode" << endl;
             return 6;
         }
         interactive_repl();
         return 0;
     } else {
-        ValidateResult result = validate_path(option.file);
+        ValidateResult result = ValidateResult::SUCCESS;
+        for (const string &file : option.files) {
+            if (option.files.size() > 1) {
+                cerr << "file: " << file << endl;
+            }
+
+            ValidateResult sub_result = validate_path(file);
+            if (sub_result != ValidateResult::SUCCESS) {
+                result = sub_result;
+            }
+        }
         return static_cast<int>(result);
     }
 }

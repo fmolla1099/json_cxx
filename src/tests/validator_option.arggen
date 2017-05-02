@@ -1,4 +1,4 @@
 ValidatorOption = [
     flag('-i', '--interactive'),
-    arg('file', default="-"),
+    rest('files'),
 ]

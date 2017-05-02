@@ -7,8 +7,8 @@
 
 
 bool ValidatorOption::operator==(const ValidatorOption &rhs) const {
-    return std::tie(this->file, this->interactive) \
-        == std::tie(rhs.file, rhs.interactive);
+    return std::tie(this->files, this->interactive) \
+        == std::tie(rhs.files, rhs.interactive);
 }
 bool ValidatorOption::operator!=(const ValidatorOption &rhs) const {
     return !(*this == rhs);
@@ -19,8 +19,10 @@ std::string ValidatorOption::to_string() const {
     std::string ans = "<ValidatorOption";
     ans += " interactive=";
     ans += this->interactive ? "true" : "false";
-    ans += " file=";
-    ans += '"' + this->file + '"';
+    ans += " files=";
+    for (const auto &item : this->files) {
+        ans += item + ",";
+    }
     return ans + ">";
 }
 
@@ -49,11 +51,7 @@ ValidatorOption ValidatorOption::parse_args(const std::vector<std::string> &args
             }
         } else {
             // positional args
-            if (position_count == 0) {
-                ans.file = piece.data();
-            } else {
-                throw ArgError("too many args: " + piece);
-            }
+            ans.files.emplace_back(piece);
             position_count++;
         }
     }
