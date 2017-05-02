@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -8,6 +9,11 @@
 #include <string>
 #include <utility>
 #include <vector>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
 
 #include "../exceptions.h"
 #include "../unicode.h"
@@ -158,6 +164,51 @@ void interactive_repl() {
 }
 
 
+bool path_exists(const string &path) {
+    return access(path.data(), F_OK) == 0;
+}
+
+
+bool path_is_dir(const string &path) {
+    struct stat buf;
+    if (stat(path.data(), &buf) != 0) {
+        return false;
+    } else {
+        return S_ISDIR(buf.st_mode);
+    }
+}
+
+
+string path_join(const string &dir_name, const string &file_name) {
+    if (!dir_name.empty() && dir_name.back() != '/') {
+        return dir_name + "/" + file_name;
+    } else {
+        return dir_name + file_name;
+    }
+}
+
+
+vector<string> path_list_dir(const string &path) {
+    vector<string> ans;
+
+    struct dirent *entry;
+    DIR *dir = opendir(path.data());
+    if (dir == nullptr) {
+        perror("Can not open dir");
+        return ans;
+    }
+
+    while ((entry = readdir(dir)) != nullptr) {
+        string file_name = entry->d_name;
+        if (file_name != "." && file_name != "..") {
+            ans.emplace_back(path_join(path, file_name));
+        }
+    }
+    closedir(dir);
+    return ans;
+}
+
+
 enum class ValidateResult : int {
     SUCCESS = 0,
     UNICODE_ERROR = 10,
@@ -204,10 +255,18 @@ ValidateResult validate_stream(istream &input) {
 }
 
 
+#define CHECK_EXISTS(path) \
+if (!path_exists(path)) { \
+    perror("Path not exists"); \
+    return ValidateResult::FILE_ERROR; \
+}
+
+
 ValidateResult validate_file(const string &path) {
     if (path == "-") {
         return validate_stream(cin);
     } else {
+        CHECK_EXISTS(path);
         ifstream input(path, std::ios::in);
         if (!input) {
             cerr << "Can not open file: " << path << endl;
@@ -215,6 +274,37 @@ ValidateResult validate_file(const string &path) {
         } else {
             return validate_stream(input);
         }
+    }
+}
+
+
+ValidateResult validate_directory(const string &path) {
+    CHECK_EXISTS(path);
+    ValidateResult result = ValidateResult::SUCCESS;
+    for (const string &sub_path : path_list_dir(path)) {
+        ValidateResult sub_result;
+        if (path_is_dir(sub_path)) {
+            cerr << "enter dir: " << sub_path << endl;
+            sub_result = validate_directory(sub_path);
+            cerr << "leave dir: " << sub_path << endl;
+        } else {
+            cerr << "file: " << sub_path << endl;
+            sub_result = validate_file(sub_path);
+        }
+        if (sub_result != ValidateResult::SUCCESS) {
+            result = sub_result;
+        }
+    }
+    return result;
+}
+
+
+ValidateResult validate_path(const string &path) {
+    CHECK_EXISTS(path);
+    if (path_is_dir(path)) {
+        return validate_directory(path);
+    } else {
+        return validate_file(path);
     }
 }
 
@@ -236,7 +326,7 @@ int main(int argc, const char *argv[]) {
         interactive_repl();
         return 0;
     } else {
-        ValidateResult result = validate_file(option.file);
+        ValidateResult result = validate_path(option.file);
         return static_cast<int>(result);
     }
 }
