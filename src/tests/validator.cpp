@@ -163,6 +163,7 @@ enum class ValidateResult : int {
     UNICODE_ERROR = 10,
     TOKENIZE_ERROR,
     PARSE_ERROR,
+    FILE_ERROR,
     UNKNOWN,
 };
 
@@ -170,8 +171,8 @@ enum class ValidateResult : int {
 ValidateResult validate_stream(istream &input) {
     Validator val;
     string line;
-    while (!input.eof()) {
-        getline(input, line);
+
+    while (getline(input, line)) {
         try {
             val.feed_line(line);
         } catch (UnicodeError &exc) {
@@ -207,8 +208,13 @@ ValidateResult validate_file(const string &path) {
     if (path == "-") {
         return validate_stream(cin);
     } else {
-        ifstream input(path);
-        return validate_stream(input);
+        ifstream input(path, std::ios::in);
+        if (!input) {
+            cerr << "Can not open file: " << path << endl;
+            return ValidateResult::FILE_ERROR;
+        } else {
+            return validate_stream(input);
+        }
     }
 }
 
