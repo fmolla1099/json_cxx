@@ -92,23 +92,24 @@ void Parser::unexpected_token(const Token &tok, const vector<TokenType> &expecte
 void Parser::st_json(const Token &tok) {
     this->states.back() = &Parser::st_json_end;
 
-    if (tok.type == TokenType::LSQUARE) {
-        this->enter_list();
-    } else if (tok.type == TokenType::LCURLY) {
-        this->enter_object();
-    } else if (tok.type == TokenType::NIL) {
+    switch (tok.type) {
+    case TokenType ::LSQUARE:
+        return this->enter_list();
+    case TokenType::LCURLY:
+        return this->enter_object();
+    case TokenType::NIL:
         this->nodes.emplace_back(new NodeNull());
-        this->leave();
-    } else if (tok.type == TokenType::BOOL) {
-        this->handle_simple_token<TokenBool, NodeBool>(tok);
-    } else if (tok.type == TokenType::INT) {
-        this->handle_simple_token<TokenInt, NodeInt>(tok);
-    } else if (tok.type == TokenType::FLOAT) {
-        this->handle_simple_token<TokenFloat, NodeFloat>(tok);
-    } else if (tok.type == TokenType::STRING) {
-        this->handle_simple_token<TokenString, NodeString>(tok);
-    } else {
-        this->unexpected_token(tok, {
+        return this->leave();
+    case TokenType::BOOL:
+        return this->handle_simple_token<TokenBool, NodeBool>(tok);
+    case TokenType::INT:
+        return this->handle_simple_token<TokenInt, NodeInt>(tok);
+    case TokenType::FLOAT:
+        return this->handle_simple_token<TokenFloat, NodeFloat>(tok);
+    case TokenType::STRING:
+        return this->handle_simple_token<TokenString, NodeString>(tok);
+    default:
+        return this->unexpected_token(tok, {
             TokenType::LSQUARE, TokenType::LCURLY,
             TokenType::INT, TokenType::FLOAT, TokenType::STRING,
         });
@@ -151,12 +152,13 @@ void Parser::st_list_end(const Token &tok) {
     NodeList &list = static_cast<NodeList &>(*this->nodes.back());
     list.value.push_back(move(node));
 
-    if (tok.type == TokenType::RSQUARE) {
-        this->leave();
-    } else if (tok.type == TokenType::COMMA) {
-        this->enter_list_item();
-    } else {
-        this->unexpected_token(tok, {TokenType::RSQUARE, TokenType::COMMA});
+    switch (tok.type) {
+    case TokenType::RSQUARE:
+        return this->leave();
+    case TokenType::COMMA:
+        return this->enter_list_item();
+    default:
+        return this->unexpected_token(tok, {TokenType::RSQUARE, TokenType::COMMA});
     }
 }
 
@@ -174,12 +176,13 @@ void Parser::st_object(const Token &tok) {
 
 
 void Parser::st_object_end(const Token &tok) {
-    if (tok.type == TokenType::RCURLY) {
-        this->leave();
-    } else if (tok.type == TokenType::COMMA) {
-        this->enter_object_item();
-    } else {
-        this->unexpected_token(tok, {TokenType::RCURLY, TokenType::COMMA});
+    switch (tok.type) {
+    case TokenType::RCURLY:
+        return this->leave();
+    case TokenType::COMMA:
+        return this->enter_object_item();
+    default:
+        return this->unexpected_token(tok, {TokenType::RCURLY, TokenType::COMMA});
     }
 }
 
