@@ -110,7 +110,7 @@ void Parser::st_json(const Token &tok) {
         return this->handle_simple_token<TokenString, NodeString>(tok);
     default:
         return this->unexpected_token(tok, {
-            TokenType::LSQUARE, TokenType::LCURLY,
+            TokenType::LSQUARE, TokenType::LCURLY, TokenType ::NIL, TokenType::BOOL,
             TokenType::INT, TokenType::FLOAT, TokenType::STRING,
         });
     }
