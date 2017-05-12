@@ -12,19 +12,6 @@ using std::move;
 using std::vector;
 
 
-enum class ParserState {
-    JSON,
-    JSON_END,
-    STRING,
-    LIST,
-    LIST_END,
-    PAIR,
-    PAIR_END,
-    OBJECT,
-    OBJECT_END,
-};
-
-
 class Parser {
 public:
     Parser();
@@ -34,7 +21,7 @@ public:
     void reset();
 
 private:
-    vector<ParserState> states;
+    vector<void (Parser::*)(const Token &)> states;
     vector<Node::Ptr> nodes;
 
     void unexpected_token(const Token &tok, const vector<TokenType> &expected);
@@ -45,6 +32,16 @@ private:
     void enter_object_item();
     void enter_pair();
     void leave();
+
+    void st_json(const Token &tok);
+    void st_json_end(const Token &tok);
+    void st_string(const Token &tok);
+    void st_list(const Token &tok);
+    void st_list_end(const Token &tok);
+    void st_pair(const Token &tok);
+    void st_pair_end(const Token &tok);
+    void st_object(const Token &tok);
+    void st_object_end(const Token &tok);
 
     template<class Tokenclass, class NodeClass>
     void handle_simple_token(const Token &tok) {
