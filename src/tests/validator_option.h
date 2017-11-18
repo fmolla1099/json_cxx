@@ -25,7 +25,7 @@ struct ValidatorOption {
     bool operator==(const ValidatorOption &rhs) const;
     bool operator!=(const ValidatorOption &rhs) const;
     static ValidatorOption parse_args(const std::vector<std::string> &args);
-    static ValidatorOption parse_argv(int argc, const char *argv[]);
+    static ValidatorOption parse_argv(int argc, const char *const argv[]);
 };
 
 #endif // ARGGEN_VALIDATOR_OPTION_H

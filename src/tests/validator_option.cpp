@@ -65,7 +65,7 @@ ValidatorOption ValidatorOption::parse_args(const std::vector<std::string> &args
 }
 
 
-ValidatorOption ValidatorOption::parse_argv(int argc, const char *argv[]) {
+ValidatorOption ValidatorOption::parse_argv(int argc, const char *const argv[]) {
     std::vector<std::string> args;
     for (int i = 1; i < argc; i++) {
         args.emplace_back(argv[i]);
