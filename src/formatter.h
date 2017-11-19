@@ -44,7 +44,7 @@ struct FormatContextData {
 
 class FormatContext : public FormatContextData {
 public:
-    FormatContext(const FormatOption &opt) : opt(opt) {}
+    explicit FormatContext(const FormatOption &opt) : opt(opt) {}
 
     void push() {
         this->stack.push_back(*this);
@@ -65,7 +65,7 @@ private:
 
 class Formatter {
 public:
-    Formatter(const FormatOption &opt = FormatOption()) : opt(opt) {}
+    explicit Formatter(const FormatOption &opt = FormatOption()) : opt(opt) {}
     ostream &format(ostream &os, const Node &node);
 
 protected:

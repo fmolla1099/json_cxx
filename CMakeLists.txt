@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(json_cxx)
 
 set(CMAKE_CXX_STANDARD 11)
+add_definitions(-Wall -Wextra)
 
 
 set(CATCH_SRC src/tests/catch_main.cpp)
