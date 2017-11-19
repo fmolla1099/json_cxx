@@ -172,6 +172,9 @@ bool Formatter::is_simple_node(const Node &node) {
         || node.type == NodeType::STRING)
     {
         return true;
+    } else if (node.type == NodeType::PAIR) {
+        const auto &pair = static_cast<const NodePair &>(node);
+        return Formatter::is_simple_node(*pair.value);
     } else if (node.type == NodeType::LIST) {
         const auto &list = static_cast<const NodeList &>(node);
         return Formatter::is_simple_list(list);
