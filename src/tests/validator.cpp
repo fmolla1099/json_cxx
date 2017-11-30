@@ -24,6 +24,10 @@
 #include "validator_option.h"
 
 
+// TODO: color
+// TODO: libreadline
+
+
 using namespace std;
 
 
@@ -173,7 +177,7 @@ bool path_exists(const string &path) {
 
 
 bool path_is_dir(const string &path) {
-    struct stat buf;
+    struct stat buf {};
     if (stat(path.data(), &buf) != 0) {
         return false;
     } else {
@@ -223,15 +227,17 @@ enum class ValidateResult : int {
 
 
 void highlight_exception_with_line(
-    ostream &outs, const BaseException &exc, const string &line, bool leading_caret)
+    ostream &outs, const BaseException &exc, const string &exc_name,
+    const string &filename, const string &line, bool leading_caret)
 {
-    string lineno = "[line:" + to_string(exc.end.lineno + 1) + "]: ";
-    outs << lineno << line << endl;
-    highlight_last_line(outs, exc.start, exc.end, leading_caret, lineno.size());
+    outs << filename << ":" << (exc.end.lineno + 1) << ":" << exc.end.rowno
+         << ": " << exc_name << ": " << exc.what() << endl;
+    outs << line << endl;
+    highlight_last_line(outs, exc.start, exc.end, leading_caret, 0);
 }
 
 
-ValidateResult validate_stream(istream &input) {
+ValidateResult validate_stream(istream &input, const string &filename) {
     Validator val;
     string line;
 
@@ -242,12 +248,10 @@ ValidateResult validate_stream(istream &input) {
             cerr << "UnicodeError: " << exc.what() << endl;
             return ValidateResult::UNICODE_ERROR;
         } catch (TokenizerError &exc) {
-            highlight_exception_with_line(cerr, exc, line, false);
-            cerr << "TokenizerError: " << exc.what() << endl;
+            highlight_exception_with_line(cerr, exc, "TokenizerError", filename, line, false);
             return ValidateResult::TOKENIZE_ERROR;
         } catch (ParserError &exc) {
-            highlight_exception_with_line(cerr, exc, line, true);
-            cerr << "ParserError: " << exc.what() << endl;
+            highlight_exception_with_line(cerr, exc, "ParserError", filename, line, true);
             return ValidateResult::PARSE_ERROR;
         } catch (exception &exc) {
             cerr << "Unknown exception: " << typeid(exc).name() << ": " << exc.what() << endl;
@@ -259,7 +263,7 @@ ValidateResult validate_stream(istream &input) {
     }
 
     if (!val.is_finished()) {
-        cerr << "Parser not finished" << endl;
+        cerr << filename << ": Parser not finished" << endl;
         return ValidateResult::PARSE_ERROR;
     }
 
@@ -278,7 +282,7 @@ ValidateResult validate_stream(istream &input) {
 
 ValidateResult validate_file(const string &path) {
     if (path == "-") {
-        return validate_stream(cin);
+        return validate_stream(cin, "<stdin>");
     } else {
         CHECK_EXISTS(path);
         ifstream input(path, std::ios::in);
@@ -286,7 +290,7 @@ ValidateResult validate_file(const string &path) {
             cerr << "Can not open file: " << path << endl;
             return ValidateResult::FILE_ERROR;
         } else {
-            return validate_stream(input);
+            return validate_stream(input, path);
         }
     }
 }
