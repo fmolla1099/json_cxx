@@ -77,45 +77,48 @@ bool is_empty_line(const string &line) {
 
 
 void highlight_last_line(
-    const SourcePos &start, const SourcePos &end, bool leading_caret = true, size_t prompt_len = 0)
+    ostream &outs,
+    const SourcePos &start, const SourcePos &end,
+    bool leading_caret = true, size_t prompt_len = 0)
 {
     assert(start.is_valid());
     assert(end.is_valid());
     assert(end.rowno >= start.rowno);
 
     if (prompt_len > 0) {
-        cerr << string(prompt_len - 1, '!') << " ";
+        outs << string(prompt_len - 1, '!') << " ";
     }
 
-    cerr << string((size_t)start.rowno, ' ');
+    outs << string((size_t)start.rowno, ' ');
 
     if (leading_caret) {
-        cerr << "^";
+        outs << "^";
     }
-    cerr << string((size_t)(end.rowno - start.rowno), '~');
+    outs << string((size_t)(end.rowno - start.rowno), '~');
     if (!leading_caret) {
-        cerr << "^";
+        outs << "^";
     }
-    cerr << endl;
+    outs << endl;
 }
 
 
-void interactive_repl() {
+void interactive_repl(istream &ins, ostream &outs, ostream &errs)
+{
     string line;
     string prompt;
     bool is_ready = true;
     Validator val;
 
-    while (cin) {
+    while (ins) {
         // print prompt
         if (is_ready) {
             prompt = "<<< ";
         } else {
             prompt = "... ";
         }
-        cout << prompt;
+        outs << prompt;
 
-        getline(cin, line);
+        getline(ins, line);
         // skip empty line
         if (is_ready && is_empty_line(line)) {
             continue;
@@ -127,13 +130,13 @@ void interactive_repl() {
             try {
                 throw;
             } catch (TokenizerError &exc) {
-                highlight_last_line(exc.start, exc.end, false, prompt.size());
-                cerr << "TokenizerError: " << exc.what() << endl;
+                highlight_last_line(errs, exc.start, exc.end, false, prompt.size());
+                errs << "TokenizerError: " << exc.what() << endl;
             } catch(ParserError &exc) {
-                highlight_last_line(exc.start, exc.end, true, prompt.size());
-                cerr << "ParserError: " << exc.what() << endl;
+                highlight_last_line(errs, exc.start, exc.end, true, prompt.size());
+                errs << "ParserError: " << exc.what() << endl;
             } catch (exception &exc) {
-                cerr << typeid(exc).name() << ": " << exc.what() << endl;
+                errs << typeid(exc).name() << ": " << exc.what() << endl;
             }
 
             // prepare for next json input
@@ -152,7 +155,7 @@ void interactive_repl() {
             string outline;
             while (!buf.eof()) {
                 getline(buf, outline);
-                cout << ">>> " << outline << endl;
+                outs << ">>> " << outline << endl;
             }
         } else {
             is_ready = false;
@@ -160,7 +163,7 @@ void interactive_repl() {
     }
 
     // print a new line after ctrl-d
-    cout << endl;
+    outs << endl;
 }
 
 
@@ -219,6 +222,15 @@ enum class ValidateResult : int {
 };
 
 
+void highlight_exception_with_line(
+    ostream &outs, const BaseException &exc, const string &line, bool leading_caret)
+{
+    string lineno = "[line:" + to_string(exc.end.lineno + 1) + "]: ";
+    outs << lineno << line << endl;
+    highlight_last_line(outs, exc.start, exc.end, leading_caret, lineno.size());
+}
+
+
 ValidateResult validate_stream(istream &input) {
     Validator val;
     string line;
@@ -230,9 +242,11 @@ ValidateResult validate_stream(istream &input) {
             cerr << "UnicodeError: " << exc.what() << endl;
             return ValidateResult::UNICODE_ERROR;
         } catch (TokenizerError &exc) {
+            highlight_exception_with_line(cerr, exc, line, false);
             cerr << "TokenizerError: " << exc.what() << endl;
             return ValidateResult::TOKENIZE_ERROR;
         } catch (ParserError &exc) {
+            highlight_exception_with_line(cerr, exc, line, true);
             cerr << "ParserError: " << exc.what() << endl;
             return ValidateResult::PARSE_ERROR;
         } catch (exception &exc) {
@@ -256,10 +270,10 @@ ValidateResult validate_stream(istream &input) {
 
 
 #define CHECK_EXISTS(path) \
-if (!path_exists(path)) { \
-    perror("Path not exists"); \
-    return ValidateResult::FILE_ERROR; \
-}
+    if (!path_exists(path)) { \
+        perror("Path not exists"); \
+        return ValidateResult::FILE_ERROR; \
+    }
 
 
 ValidateResult validate_file(const string &path) {
@@ -323,7 +337,7 @@ int main(int argc, const char *argv[]) {
             cerr << "can not specify argument in interactive mode" << endl;
             return 6;
         }
-        interactive_repl();
+        interactive_repl(cin, cout, cerr);
         return 0;
     } else {
         ValidateResult result = ValidateResult::SUCCESS;
