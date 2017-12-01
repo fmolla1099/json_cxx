@@ -149,6 +149,38 @@ TEST_CASE("Test Scanner string") {
 }
 
 
+void check_token_comment(const string &str, const char *expect) {
+    check_tokens(str, {new TokenComment(u8_decode(expect))});
+}
+
+
+TEST_CASE("Test Scanner comment") {
+    check_token_comment("//", "");
+    check_token_comment("// asdf", " asdf");
+    check_token_comment("//a", "a");
+    check_token_comment("//\n", "");
+    check_token_comment("//a\n", "a");
+    check_token_comment("///", "/");
+    check_token_comment("////", "//");
+    check_token_comment("//*/", "*/");
+    check_token_comment("//**/", "**/");
+
+    check_token_comment("/**/", "");
+    check_token_comment("/***/", "*");
+    check_token_comment("/****/", "**");
+    check_token_comment("/*a*/", "a");
+    check_token_comment("/*abc*/", "abc");
+    check_token_comment("/*a\nbc*/", "a\nbc");
+    check_token_comment("/**a**/", "*a*");
+    check_token_comment("/*a*b*c*/", "a*b*c");
+
+    CHECK_THROWS_AS(get_tokens("/"), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("/*"), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("/**"), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("/*/"), TokenizerError);
+}
+
+
 void check_exception_pos(const string &str, SourcePos start, SourcePos end) {
     REQUIRE_THROWS_AS(get_tokens(str), TokenizerError);
     try {

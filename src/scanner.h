@@ -101,6 +101,7 @@ typedef ExtendedToken<bool, TokenType::BOOL> TokenBool;
 typedef ExtendedToken<int64_t, TokenType::INT> TokenInt;
 typedef ExtendedToken<double, TokenType::FLOAT> TokenFloat;
 typedef ExtendedToken<CharConf::StringType, TokenType::STRING> TokenString;
+typedef ExtendedToken<CharConf::StringType, TokenType::COMMENT> TokenComment;
 
 
 enum class ScannerState {
@@ -108,6 +109,7 @@ enum class ScannerState {
     ID,
     NUMBER,
     STRING,
+    COMMENT,
     ENDED,
 };
 
@@ -156,6 +158,20 @@ struct StringState {
 };
 
 
+enum class CommentSubState {
+    SLASH,
+    SLASH_DOUBLE,
+    STAR_BEGIN,
+    STAR_MAY_END,
+};
+
+
+struct CommentState {
+    CommentSubState state = CommentSubState::SLASH;
+    CharConf::StringType value;
+};
+
+
 struct IdState {
     CharConf::StringType value;
 };
@@ -173,7 +189,9 @@ private:
     void st_id(CharConf::CharType ch);
     void st_number(CharConf::CharType ch);
     void st_string(CharConf::CharType ch);
+    void st_comment(CharConf::CharType ch);
     void finish_num(CharConf::CharType ch);
+    void finish_comment();
     void exception(
         const string &msg,
         SourcePos start = SourcePos(), SourcePos end = SourcePos()
@@ -188,6 +206,7 @@ private:
 
     NumberState num_state;
     StringState string_state;
+    CommentState comment_state;
     IdState id_state;
 
     static const map<CharConf::CharType, CharConf::CharType> escape_map;

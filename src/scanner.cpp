@@ -111,6 +111,18 @@ string TokenString::repr_value() const {
 }
 
 
+template<>
+string TokenComment::name() const {
+    return "Comment";
+}
+
+
+template<>
+string TokenComment::repr_value() const {
+    return u8_encode(this->value);  // TODO: ...
+}
+
+
 void Scanner::feed(CharConf::CharType ch) {
     // TODO: limit stack depth
     this->prev_pos = this->cur_pos;
@@ -129,6 +141,8 @@ void Scanner::refeed(CharConf::CharType ch) {
             return this->st_number(ch);
         case ScannerState::STRING:
             return this->st_string(ch);
+        case ScannerState::COMMENT:
+            return this->st_comment(ch);
         case ScannerState::ENDED:
             return this->exception("received char in ENDED state");
     }
@@ -176,6 +190,8 @@ void Scanner::st_init(CharConf::CharType ch) {
     } else if (is_alpha(ch)) {
         this->state = ScannerState::ID;
         this->refeed(ch);
+    } else if (ch == '/') {
+        this->state = ScannerState::COMMENT;
     } else {
         this->unknown_char(ch);
     }
@@ -381,6 +397,73 @@ void Scanner::st_string(CharConf::CharType ch) {
     } else {
         assert(!"Unreachable");
     }
+}
+
+
+void Scanner::st_comment(CharConf::CharType ch) {
+    CommentState &cs = this->comment_state;
+    switch (cs.state) {
+    case CommentSubState::SLASH:
+        switch (ch) {
+        case '/':
+            cs.state = CommentSubState::SLASH_DOUBLE;
+            break;
+        case '*':
+            cs.state = CommentSubState::STAR_BEGIN;
+            break;
+        default:
+            this->unknown_char(ch, "expect '/' or '*'");
+        }
+        break;
+    case CommentSubState::SLASH_DOUBLE:
+        switch (ch) {
+        case '\n':
+            this->finish_comment();
+            break;
+        case '\0':
+            this->finish_comment();
+            this->refeed(ch);
+            break;
+        default:
+            cs.value.push_back(ch);
+        }
+        break;
+    case CommentSubState::STAR_BEGIN:
+        switch (ch) {
+        case '*':
+            cs.state = CommentSubState::STAR_MAY_END;
+            break;
+        case '\0':
+            this->unknown_char(ch, "expect '*/'");
+        default:
+            cs.value.push_back(ch);
+        }
+        break;
+    case CommentSubState::STAR_MAY_END:
+        switch (ch) {
+        case '/':
+            this->finish_comment();
+            break;
+        default:
+            cs.value.push_back('*');
+            cs.state = CommentSubState::STAR_BEGIN;
+            this->refeed(ch);
+        }
+        break;
+    default:
+        assert(!"Unreachable");
+    }
+}
+
+
+void Scanner::finish_comment() {
+    Token *tok = new TokenComment(this->comment_state.value);
+    tok->start = this->start_pos;
+    tok->end = this->cur_pos;
+    this->buffer.emplace_back(tok);
+    // reset
+    this->comment_state = CommentState();
+    this->state = ScannerState::INIT;
 }
 
 
