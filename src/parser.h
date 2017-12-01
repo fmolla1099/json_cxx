@@ -14,15 +14,21 @@ using std::vector;
 
 class Parser {
 public:
-    Parser();
+    Parser() : states({&Parser::st_json}) {}
     void feed(const Token &tok);
     Node::Ptr pop_result();
     bool is_finished() const;
     void reset();
 
+    Parser &enable_comment(bool value) {
+        this->comment = value;
+        return *this;
+    }
+
 private:
     vector<void (Parser::*)(const Token &)> states;
     vector<Node::Ptr> nodes;
+    bool comment = false;
 
     void unexpected_token(const Token &tok, const vector<TokenType> &expected);
     void enter_json();

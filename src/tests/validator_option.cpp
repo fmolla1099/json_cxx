@@ -7,8 +7,8 @@
 
 
 bool ValidatorOption::operator==(const ValidatorOption &rhs) const {
-    return std::tie(this->files, this->interactive) \
-        == std::tie(rhs.files, rhs.interactive);
+    return std::tie(this->comment, this->files, this->interactive) \
+        == std::tie(rhs.comment, rhs.files, rhs.interactive);
 }
 bool ValidatorOption::operator!=(const ValidatorOption &rhs) const {
     return !(*this == rhs);
@@ -19,6 +19,8 @@ std::string ValidatorOption::to_string() const {
     std::string ans = "<ValidatorOption";
     ans += " interactive=";
     ans += this->interactive ? "true" : "false";
+    ans += " comment=";
+    ans += this->comment ? "true" : "false";
     ans += " files=";
     for (const auto &item : this->files) {
         ans += item + ",";
@@ -35,7 +37,9 @@ ValidatorOption ValidatorOption::parse_args(const std::vector<std::string> &args
         const std::string &piece = args[i];
         if (piece.size() > 2 && piece[0] == '-' && piece[1] == '-') {
             // long options
-            if (piece == "--interactive") {
+            if (piece == "--comment") {
+                ans.comment = true;
+            } else if (piece == "--interactive") {
                 ans.interactive = true;
             } else {
                 throw ArgError("Unknown option: " + piece);
@@ -43,7 +47,9 @@ ValidatorOption ValidatorOption::parse_args(const std::vector<std::string> &args
         } else if (piece.size() >= 2 && piece[0] == '-') {
             // short options
             for (auto it = piece.begin() + 1; it != piece.end(); ++it) {
-                if (*it == 'i') {
+                if (*it == 'c') {
+                    ans.comment = true;
+                } else if (*it == 'i') {
                     ans.interactive = true;
                 } else {
                     throw ArgError("Unknown flag: " + std::string(1, *it));

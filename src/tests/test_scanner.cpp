@@ -175,9 +175,15 @@ TEST_CASE("Test Scanner comment") {
     check_token_comment("/*a*b*c*/", "a*b*c");
 
     CHECK_THROWS_AS(get_tokens("/"), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("/\n"), TokenizerError);
     CHECK_THROWS_AS(get_tokens("/*"), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("/*\n"), TokenizerError);
     CHECK_THROWS_AS(get_tokens("/**"), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("/**\n"), TokenizerError);
     CHECK_THROWS_AS(get_tokens("/*/"), TokenizerError);
+    CHECK_THROWS_AS(get_tokens("/*a"), TokenizerError);
+
+    CHECK_THROWS_AS(get_tokens("1/*"), TokenizerError);
 }
 
 

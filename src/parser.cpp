@@ -10,11 +10,6 @@ using std::move;
 using std::to_string;
 
 
-Parser::Parser() {
-    this->states.push_back(&Parser::st_json);
-}
-
-
 Node::Ptr Parser::pop_result() {
     assert(this->is_finished());
     Node::Ptr node = move(this->nodes.back());
@@ -29,11 +24,16 @@ bool Parser::is_finished() const {
 
 
 void Parser::reset() {
-    *this = Parser();
+    this->states = {&Parser::st_json};
+    this->nodes.clear();
 }
 
 
 void Parser::feed(const Token &tok) {
+    if (this->comment && tok.type == TokenType::COMMENT) {
+        return; // allow comment
+    }
+
     if (this->states.empty()) {
         if (tok.type != TokenType::END) {
             this->unexpected_token(tok, {TokenType::END});

@@ -182,6 +182,9 @@ public:
     void feed(CharConf::CharType ch);
     Token::Ptr pop();
     void reset();
+    bool is_finished() const {
+        return this->state == ScannerState::INIT;
+    }
 
 private:
     void refeed(CharConf::CharType ch);

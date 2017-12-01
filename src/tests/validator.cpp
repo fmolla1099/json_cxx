@@ -33,6 +33,10 @@ using namespace std;
 
 class Validator {
 public:
+    Validator(const ValidatorOption &option) {
+        this->parser.enable_comment(option.comment);
+    }
+
     void feed_line(const string &line) {
         try {
             this->feed_line_unchecked(line);
@@ -43,7 +47,7 @@ public:
     }
 
     bool is_finished() const {
-        return this->parser.is_finished();
+        return this->parser.is_finished() && this->scanner.is_finished();
     }
 
     Node::Ptr pop_result() {
@@ -106,12 +110,13 @@ void highlight_last_line(
 }
 
 
-void interactive_repl(istream &ins, ostream &outs, ostream &errs)
+void interactive_repl(
+    const ValidatorOption &option, istream &ins, ostream &outs, ostream &errs)
 {
     string line;
     string prompt;
     bool is_ready = true;
-    Validator val;
+    Validator val(option);
 
     while (ins) {
         // print prompt
@@ -124,7 +129,7 @@ void interactive_repl(istream &ins, ostream &outs, ostream &errs)
 
         getline(ins, line);
         // skip empty line
-        if (is_ready && is_empty_line(line)) {
+        if (is_ready && is_empty_line(line)) {  // BUG: should skip comment too
             continue;
         }
 
@@ -237,8 +242,10 @@ void highlight_exception_with_line(
 }
 
 
-ValidateResult validate_stream(istream &input, const string &filename) {
-    Validator val;
+ValidateResult validate_stream(
+    const ValidatorOption &option, istream &input, const string &filename)
+{
+    Validator val(option);
     string line;
 
     while (getline(input, line)) {
@@ -280,9 +287,9 @@ ValidateResult validate_stream(istream &input, const string &filename) {
     }
 
 
-ValidateResult validate_file(const string &path) {
+ValidateResult validate_file(const ValidatorOption &option, const string &path) {
     if (path == "-") {
-        return validate_stream(cin, "<stdin>");
+        return validate_stream(option, cin, "<stdin>");
     } else {
         CHECK_EXISTS(path);
         ifstream input(path, std::ios::in);
@@ -290,24 +297,24 @@ ValidateResult validate_file(const string &path) {
             cerr << "Can not open file: " << path << endl;
             return ValidateResult::FILE_ERROR;
         } else {
-            return validate_stream(input, path);
+            return validate_stream(option, input, path);
         }
     }
 }
 
 
-ValidateResult validate_directory(const string &path) {
+ValidateResult validate_directory(const ValidatorOption &option, const string &path) {
     CHECK_EXISTS(path);
     ValidateResult result = ValidateResult::SUCCESS;
     for (const string &sub_path : path_list_dir(path)) {
         ValidateResult sub_result;
         if (path_is_dir(sub_path)) {
             cerr << "enter dir: " << sub_path << endl;
-            sub_result = validate_directory(sub_path);
+            sub_result = validate_directory(option, sub_path);
             cerr << "leave dir: " << sub_path << endl;
         } else {
             cerr << "file: " << sub_path << endl;
-            sub_result = validate_file(sub_path);
+            sub_result = validate_file(option, sub_path);
         }
         if (sub_result != ValidateResult::SUCCESS) {
             result = sub_result;
@@ -317,12 +324,12 @@ ValidateResult validate_directory(const string &path) {
 }
 
 
-ValidateResult validate_path(const string &path) {
+ValidateResult validate_path(const ValidatorOption &option, const string &path) {
     CHECK_EXISTS(path);
     if (path_is_dir(path)) {
-        return validate_directory(path);
+        return validate_directory(option, path);
     } else {
-        return validate_file(path);
+        return validate_file(option, path);
     }
 }
 
@@ -341,7 +348,7 @@ int main(int argc, const char *argv[]) {
             cerr << "can not specify argument in interactive mode" << endl;
             return 6;
         }
-        interactive_repl(cin, cout, cerr);
+        interactive_repl(option, cin, cout, cerr);
         return 0;
     } else {
         ValidateResult result = ValidateResult::SUCCESS;
@@ -350,7 +357,7 @@ int main(int argc, const char *argv[]) {
                 cerr << "file: " << file << endl;
             }
 
-            ValidateResult sub_result = validate_path(file);
+            ValidateResult sub_result = validate_path(option, file);
             if (sub_result != ValidateResult::SUCCESS) {
                 result = sub_result;
             }

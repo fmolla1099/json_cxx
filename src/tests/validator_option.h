@@ -16,6 +16,8 @@ public:
 
 
 struct ValidatorOption {
+    // options: ('-c', '--comment'), arg_type: ArgType.BOOL
+    bool comment = false;
     // options: ('files',), arg_type: ArgType.REST
     std::vector<std::string> files;
     // options: ('-i', '--interactive'), arg_type: ArgType.BOOL

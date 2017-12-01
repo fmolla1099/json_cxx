@@ -1,4 +1,5 @@
 ValidatorOption = [
     flag('-i', '--interactive'),
+    flag('-c', '--comment'),
     rest('files'),
 ]
