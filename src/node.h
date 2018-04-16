@@ -94,7 +94,7 @@ struct NodeList : Node {
 
 struct NodePair : Node {
     NodePair(NodeString::Ptr &&key, Node::Ptr &&value)
-        : Node(NodeType::PAIR) , key(move(key)), value(move(value))
+        : Node(NodeType::PAIR), key(move(key)), value(move(value))
     {}
     NODE_COMMON_DECL(NodePair);
 
