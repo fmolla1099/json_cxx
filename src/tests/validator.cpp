@@ -33,7 +33,7 @@ using namespace std;
 
 class Validator {
 public:
-    Validator(const ValidatorOption &option) {
+    explicit Validator(const ValidatorOption &option) {
         this->parser.enable_comment(option.comment);
     }
 
